@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CardGameAtlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: Android
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 29
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 29
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 0
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 56407e930f267904c9bb221916269c94, type: 3}
+    - {fileID: 2800000, guid: 3b638f262ceeea147b74b446eb61f08f, type: 3}
+    - {fileID: 2800000, guid: 65b9b31a8be65ec45a0d042ad4f1be66, type: 3}
+    - {fileID: 2800000, guid: 491f93eab515213449383ebca855fe20, type: 3}
+    - {fileID: 2800000, guid: 9766472d06601bf4cbacb9c06ef71ce5, type: 3}
+    - {fileID: 2800000, guid: 554b0c00127326444b73b9529c086109, type: 3}
+    - {fileID: 2800000, guid: 00a350f37f2ec2843ab5daedf9b7519f, type: 3}
+    - {fileID: 2800000, guid: c034de4bf16ac034b9517997f5eb2fe7, type: 3}
+    - {fileID: 2800000, guid: d690ab9533b969c4293771326be3f4bf, type: 3}
+    - {fileID: 2800000, guid: 0d370e2b5df8ec24884ec22b039182c4, type: 3}
+    - {fileID: 2800000, guid: b043e95f838dcea4fa8e663e84f7439d, type: 3}
+    - {fileID: 2800000, guid: c96053c69c7515041bf7bd878ab532e3, type: 3}
+    totalSpriteSurfaceArea: 735134
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 554b0c00127326444b73b9529c086109, type: 3}
+  - {fileID: 21300000, guid: 56407e930f267904c9bb221916269c94, type: 3}
+  - {fileID: 21300000, guid: 00a350f37f2ec2843ab5daedf9b7519f, type: 3}
+  - {fileID: 21300000, guid: d690ab9533b969c4293771326be3f4bf, type: 3}
+  - {fileID: 21300000, guid: 3b638f262ceeea147b74b446eb61f08f, type: 3}
+  - {fileID: 21300000, guid: c96053c69c7515041bf7bd878ab532e3, type: 3}
+  - {fileID: 21300000, guid: 65b9b31a8be65ec45a0d042ad4f1be66, type: 3}
+  - {fileID: 21300000, guid: 491f93eab515213449383ebca855fe20, type: 3}
+  - {fileID: 21300000, guid: 0d370e2b5df8ec24884ec22b039182c4, type: 3}
+  - {fileID: 21300000, guid: c034de4bf16ac034b9517997f5eb2fe7, type: 3}
+  - {fileID: 21300000, guid: 9766472d06601bf4cbacb9c06ef71ce5, type: 3}
+  - {fileID: 21300000, guid: b043e95f838dcea4fa8e663e84f7439d, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - Diamond
+  - Club
+  - Heart
+  - BlankCard
+  - Diamond
+  - 1
+  - Heart
+  - Spade
+  - 3
+  - Spade
+  - Club
+  - 2
+  m_Tag: CardGameAtlas
+  m_IsVariant: 0
