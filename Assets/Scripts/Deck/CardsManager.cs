@@ -45,26 +45,7 @@ public class CardsManager : MonoBehaviour
 
     
 
-    public Card CreateNewCard(int cardIndex, string cardBackName, string cardFrontName)
-    {
-        Card cardClone = Instantiate(cardPrefab.GetComponent<Card>());
-        cardClone.name = (cardClone.transform.parent.childCount - 1).ToString();
-        cardClone.SetCard(cardIndex);
-        cardClone.RefreshCard();
-        cardClone.HideCard();
-        return cardClone;
-    }
-
-    public Card SetCardDesign(int cardIndex, Transform parent, Vector3 pos)
-    {
-        Card cardClone = Instantiate(cardPrefab.GetComponent<Card>(), pos, Quaternion.identity, parent);
-        cardClone.name = (cardClone.transform.parent.childCount - 1).ToString();
-        cardClone.SetCard(cardIndex);
-        cardClone.RefreshCard();
-        cardClone.HideCard();
-        return cardClone;
-    }
-
+    
     public Sprite GetCardBack(string cardBackName)
     {
         for (int i = 0; i < cardsBack.Count; i++)

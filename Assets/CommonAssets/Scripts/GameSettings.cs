@@ -23,7 +23,7 @@ public class GameSettings : MonoBehaviour
     public void MusicVolSlider(Slider slider)
     {
         PlayerPrefs.SetFloat("musicVol", slider.value);
-        if (MusicUtils.ins != null) { MusicUtils.ins.SetVolume(slider.value); }
+        //if (MusicUtils.ins != null) { MusicUtils.ins.SetVolume(slider.value); }
     }
 
     

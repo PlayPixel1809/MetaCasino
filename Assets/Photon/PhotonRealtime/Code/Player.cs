@@ -39,6 +39,8 @@ namespace Photon.Realtime
     /// </remarks>
     public class Player
     {
+        public Player() { }
+
         /// <summary>
         /// Used internally to identify the masterclient of a room.
         /// </summary>
@@ -53,6 +55,7 @@ namespace Photon.Realtime
         public int ActorNumber
         {
             get { return this.actorNumber; }
+            set { this.actorNumber = value; }
         }
 
 

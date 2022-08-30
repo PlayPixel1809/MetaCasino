@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 public class Joystick : MonoBehaviour, IDragHandler, IPointerDownHandler , IPointerUpHandler
 {
+    public static Joystick ins;
+    void Awake() { ins = this; }
+
     public float innerRadius = 132.5f;
     public float outerRadius = 150;
     public Transform joystick;

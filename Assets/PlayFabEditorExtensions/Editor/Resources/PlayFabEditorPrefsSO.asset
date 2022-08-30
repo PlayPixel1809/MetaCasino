@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DevAccountEmail: playpixelinteractive1809@outlook.com
   DevAccountToken: 7kwsmyaqktisfs1oighefbp9byt3ojp8o8urcea9mut5n675wm5uwt9ukp36n7yq55z8pk6e65szsss49qomhsrikbnpckgjctiabo1hkb3brnudn4qh7kbkb59wjf4ru416jqqgxtkcgfywpt76sek31w5cwi1pnfpp8xboa4juoha4h1kdbphqekpbakumwb9fdpek
-  SelectedStudio: PlayPixel
+  SelectedStudio: MetaCasinoStudio
   SdkPath: Assets/PlayFabSDK
   EdExPath: 
   LocalCloudScriptPath: 

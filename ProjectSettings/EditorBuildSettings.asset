@@ -5,13 +5,16 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/StreetEnv.unity
-    guid: 56bae533588ab7944a98071fe8048518
   - enabled: 1
+    path: Assets/Scenes/Login.unity
+    guid: 899ce0fc579e1644381410d369ef3813
+  - enabled: 1
+    path: Assets/Scenes/Lobby.unity
+    guid: 56bae533588ab7944a98071fe8048518
+  - enabled: 0
     path: Assets/Scenes/PokerRoom.unity
     guid: ec4f54ee4b6f01c4298c0cf5c2c7ecc8
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/PokerRoom_2.unity
     guid: 2e69d27c03dc94249b927753ec57b06c
   m_configObjects:

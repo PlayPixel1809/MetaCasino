@@ -2,14 +2,10 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
-
 public class TPSController : MonoBehaviour
 {
-    public Text nameTxt;
-
     public Joystick joystick;
     
     public float walkSpeed = 2f;
@@ -90,9 +86,6 @@ public class TPSController : MonoBehaviour
     void Update()
     {
         if (joystickActive) { return; }
-        
-        
-        
         
         float characterX = Input.GetAxis("Vertical");
         float characterZ = Input.GetAxis("Horizontal");

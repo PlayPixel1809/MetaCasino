@@ -37,27 +37,39 @@ public class CameraController : MonoBehaviour
     {
         if (colliderImage == null ) 
         {
-            rotation.y += Input.GetAxis("Mouse X") * lookSpeed;
-            rotation.x += -Input.GetAxis("Mouse Y") * lookSpeed;
+            cameraParent.Rotate(-Input.GetAxis("Mouse Y") * Time.deltaTime * lookSpeed, 0, 0);
+            character.Rotate(0, Input.GetAxis("Mouse X") * Time.deltaTime * lookSpeed, 0, Space.World);
 
-            rotation.x = Mathf.Clamp(rotation.x, -lookXLimit, lookXLimit);
-            if (lookYLimitActive) { rotation.y = Mathf.Clamp(rotation.y, -lookYLimit, lookYLimit); }
+            /*
+            if (lookYLimitActive) 
+             { 
+                 rotation.y = Mathf.Clamp(rotation.y, -lookYLimit, lookYLimit); 
+             }
 
-            cameraParent.localRotation = Quaternion.Euler(rotation.x, cameraParent.localRotation.y, 0);
-            character.eulerAngles = new Vector2(character.eulerAngles.x, rotation.y);
+             //rotation.y += Input.GetAxis("Mouse X") * lookSpeed;
+             rotation.x += -Input.GetAxis("Mouse Y") * lookSpeed;
+
+             rotation.x = Mathf.Clamp(rotation.x, -lookXLimit, lookXLimit);
+             if (lookYLimitActive) { rotation.y = Mathf.Clamp(rotation.y, -lookYLimit, lookYLimit); }
+
+             cameraParent.localRotation = Quaternion.Euler(rotation.x, cameraParent.localRotation.y, 0);
+             character.eulerAngles = new Vector2(character.eulerAngles.x, rotation.y);*/
         }
     }
 
     public void OnPointerDrag(PointerEventData data)
     {
-        rotation.y += data.delta.x * Time.deltaTime * lookSpeed;
+        cameraParent.Rotate(-data.delta.y * Time.deltaTime * lookSpeed, 0, 0);
+        character.Rotate(0, data.delta.x * Time.deltaTime * lookSpeed, 0, Space.World);
+
+        /*rotation.y += data.delta.x * Time.deltaTime * lookSpeed;
         rotation.x += -data.delta.y * Time.deltaTime * lookSpeed;
 
         rotation.x = Mathf.Clamp(rotation.x, -lookXLimit, lookXLimit);
         if (lookYLimitActive) { rotation.y = Mathf.Clamp(rotation.y, -lookYLimit, lookYLimit); }
 
         cameraParent.localRotation = Quaternion.Euler(rotation.x, cameraParent.localRotation.y, 0);
-        character.eulerAngles = new Vector2(character.eulerAngles.x, rotation.y);
+        character.eulerAngles = new Vector2(character.eulerAngles.x, rotation.y);*/
     }
     
 }

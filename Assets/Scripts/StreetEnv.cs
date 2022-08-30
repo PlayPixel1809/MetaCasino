@@ -40,7 +40,7 @@ public class StreetEnv : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         if (User.localUser == null)
         {
-            User.CreateLocalUser((u) => { JoinStreetEnv(); });
+            //User.CreateLocalUser((u) => { JoinStreetEnv(); });
             return;
         }
 

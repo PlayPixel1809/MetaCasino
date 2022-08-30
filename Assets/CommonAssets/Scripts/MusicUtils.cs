@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MusicUtils : MonoBehaviour
+public class AudioUtils : MonoBehaviour
 {
-    public static MusicUtils ins;
+    public static AudioUtils ins;
     void Awake() { ins = this; }
 
     public AudioSource audioSource;

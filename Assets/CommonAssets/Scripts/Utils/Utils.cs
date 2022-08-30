@@ -14,6 +14,21 @@ public static class Utils
     {
         if (delay == 0) { yield return new WaitForEndOfFrame(); }
         if (delay > 0)  { yield return new WaitForSeconds(delay); }
-        if (action != null) { action.Invoke(); }
+        action?.Invoke(); 
+    }
+
+    public static void FrameDelayedAction(Action action, int frames = 1)
+    {
+        GameUtils.ins.StartCoroutine(FrameDelayedActionCoroutine(action, frames));
+    }
+
+    static IEnumerator FrameDelayedActionCoroutine(Action action, int frames = 1)
+    {
+        while (frames > 0)
+        {
+            frames -= 1;
+            yield return new WaitForEndOfFrame();
+        }
+        action?.Invoke(); 
     }
 }

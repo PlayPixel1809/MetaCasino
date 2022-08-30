@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CasinoGameAtlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: Android
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 29
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 29
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 0
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: d91190a352aa1b34ab9ac16ae36ff5a7, type: 3}
+    - {fileID: 2800000, guid: dcd298f2e0996ff4b9aa9bda5cd1f6fd, type: 3}
+    - {fileID: 2800000, guid: 4dec5dfa17e8064459be2cbbe68a2ed0, type: 3}
+    - {fileID: 2800000, guid: 1accd7552876fbb48bd5d645ee72ee93, type: 3}
+    - {fileID: 2800000, guid: ac75add73f4e5a843a6a6d9eea442da3, type: 3}
+    - {fileID: 2800000, guid: b96fa84374e24fe45a4ad2ed9f9d3787, type: 3}
+    - {fileID: 2800000, guid: 45b241bdcb0c53c4aa6733d04d3d1bf4, type: 3}
+    - {fileID: 2800000, guid: 5105de3637bed3b4fabd033f49e0b3cd, type: 3}
+    - {fileID: 2800000, guid: 92770cdcd933e13458d47163a89680df, type: 3}
+    totalSpriteSurfaceArea: 5112369
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: dcd298f2e0996ff4b9aa9bda5cd1f6fd, type: 3}
+  - {fileID: 21300000, guid: b96fa84374e24fe45a4ad2ed9f9d3787, type: 3}
+  - {fileID: 21300000, guid: d91190a352aa1b34ab9ac16ae36ff5a7, type: 3}
+  - {fileID: 21300000, guid: 1accd7552876fbb48bd5d645ee72ee93, type: 3}
+  - {fileID: 21300000, guid: 5105de3637bed3b4fabd033f49e0b3cd, type: 3}
+  - {fileID: 21300000, guid: ac75add73f4e5a843a6a6d9eea442da3, type: 3}
+  - {fileID: 21300000, guid: 4dec5dfa17e8064459be2cbbe68a2ed0, type: 3}
+  - {fileID: 21300000, guid: 92770cdcd933e13458d47163a89680df, type: 3}
+  - {fileID: 21300000, guid: 45b241bdcb0c53c4aa6733d04d3d1bf4, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - BG_2
+  - MailIcon
+  - Bg_1
+  - Dealer
+  - WhatsAppIcon
+  - Chip_1
+  - Chips
+  - Chip_2
+  - SkypeIcon
+  m_Tag: CasinoGameAtlas
+  m_IsVariant: 0

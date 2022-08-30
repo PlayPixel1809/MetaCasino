@@ -1,60 +1,75 @@
 using Photon.Pun;
-using Photon.Realtime;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using PlayFab;
+using PlayFab.ClientModels;
+using System;
+using Newtonsoft.Json;
 
-public class User : MonoBehaviour
+
+public partial class User : MonoBehaviour
 {
-    public enum UserTypes { Local, Network, Bot }
+    public static User ins;
+    public void Awake() { ins = this; }
 
     public static User localUser;
+    public static Action onCreateLocalUser;
 
-    [HideInInspector] public UserTypes userType;
+    public string playfabId;
+    public string username = "DemoUser";
+    public float balance = 100000;
 
-    public class UserInfo
+    [HideInInspector] public int roomIndex;
+    public DateTime currentTime;
+    public string currentTimeString;
+
+    public LoginResult loginResult;
+
+   
+    
+    public static void LoginAndCreateLocalUser(string playFabEmail, string password)
     {
-        public string nickname;
-        public float balance = 100000;
-        public Vector3 pos = Vector3.zero;
-        public float rotY = 0;
+        NoticeUtils.ins.ShowLoadingAlert("Login user");
+
+
+        GetPlayerCombinedInfoRequestParams parameters = new GetPlayerCombinedInfoRequestParams() { GetUserAccountInfo = true, GetUserData = true };
+        PlayFabClientAPI.LoginWithEmailAddress(new LoginWithEmailAddressRequest() { Email = playFabEmail, Password = password, InfoRequestParameters = parameters },
+        res =>
+        {
+            NoticeUtils.ins.HideLoadingAlert();
+            CreateUser(res);
+        },
+        err =>
+        {
+            Debug.Log("Error: " + (err.ErrorMessage));
+            NoticeUtils.ins.HideLoadingAlert();
+            NoticeUtils.ins.ShowOneBtnAlert((err.ErrorMessage));
+        });
     }
 
 
-    public void MakeLocal(UserInfo userInfo)
-    {
-        gameObject.SetActive(true);
-        userType = UserTypes.Local;
-        localUser = this;
-        gameObject.AddComponent<UserSceneData>();
-
-        PhotonNetwork.LocalPlayer.NickName = userInfo.nickname;
-        PhotonNetwork.LocalPlayer.CustomProperties.Add("balance", userInfo.balance);
-        //PhotonNetwork.LocalPlayer.CustomProperties.Add("pos", (Vector3.zero).ToString());
-
-
-        DontDestroyOnLoad(this);
-    }
-
-    public static void CreateLocalUser(UserInfo userInfo, Action<Player> onUserCreated)
+    public static void CreateUser(LoginResult loginResult)
     {
         User user = new GameObject("LocalUser").AddComponent<User>();
-        user.MakeLocal(userInfo);
-        onUserCreated?.Invoke(PhotonNetwork.LocalPlayer);
+        user.loginResult = loginResult;
+        Dictionary<string, UserDataRecord> userData = loginResult.InfoResultPayload.UserData;
+
+        user.playfabId = loginResult.PlayFabId;
+        user.username = loginResult.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+
+        if (userData.ContainsKey("balance"))                    { user.balance = float.Parse(userData["balance"].Value); }
+
+        CreateLocalUser(user);
     }
 
-    public static void CreateLocalUser(Action<Player> onUserCreated)
+    public static void CreateLocalUser(User user)
     {
-        NoticeUtils.ins.ShowInputAlert("Please enter your name", (i, s, g) =>
-        {
-            if (i == 0)
-            {
-                if (string.IsNullOrEmpty(s)) { NoticeUtils.ins.ShowOneBtnAlert("Name cannot be empty"); return; }
-                
-                g.SetActive(false);
-                CreateLocalUser(new UserInfo() { nickname = s }, onUserCreated);
-            }
-        });
+        localUser = user;
+        PhotonNetwork.LocalPlayer.NickName = localUser.username;
+        localUser.gameObject.AddComponent<SceneData>();
+        localUser.GetServerTime();
+        DontDestroyOnLoad(localUser.gameObject);
+        onCreateLocalUser?.Invoke();
     }
 }
