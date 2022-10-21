@@ -7,6 +7,8 @@ using UnityEngine;
 
 public static class ph //photon helper
 {
+    public static Player GetLocalPlayer() { return PhotonNetwork.LocalPlayer; }
+
     public static bool IsMasterClient()
     {
         if (PhotonNetwork.CurrentRoom == null) { return true; }
@@ -49,13 +51,18 @@ public static class ph //photon helper
         return 0;
     }
 
-    public static void SetRoomData(string key, object val)
+    public static void SetRoomData(string key, object val, bool onlyMasterClientCanSet = true)
     {
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() { { key, val } });
+        SetRoomData(new ExitGames.Client.Photon.Hashtable() { { key, val } });
     }
 
-    public static void SetRoomData(ExitGames.Client.Photon.Hashtable data)
+    public static void SetRoomData(ExitGames.Client.Photon.Hashtable data, bool onlyMasterClientCanSet = true)
     {
+        if (onlyMasterClientCanSet && !IsMasterClient())
+        {
+            //Debug.Log("Someone other than MasterClient is setting data.");
+            return;
+        }
         PhotonNetwork.CurrentRoom.SetCustomProperties(data);
     }
 
@@ -121,6 +128,7 @@ public static class ph //photon helper
         player.CustomProperties = new ExitGames.Client.Photon.Hashtable();
     }
 
+    
     public static void SetLocalPlayerData(string key, object val)
     {
         SetPlayerData(PhotonNetwork.LocalPlayer, key, val);

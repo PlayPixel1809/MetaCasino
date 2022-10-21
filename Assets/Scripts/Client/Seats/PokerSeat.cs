@@ -5,65 +5,69 @@ using UnityEngine.UI;
 
 public class PokerSeat : MonoBehaviour
 {
-    private TurnGameSeat turnGameSeat;
-    private CardGameSeat cardGameSeat;
+    public NetworkGameSeat networkGameSeat;
+    public TurnGameSeat turnGameSeat;
+    public CardGameSeat cardGameSeat;
 
     void Start()
     {
-        turnGameSeat = GetComponent<TurnGameSeat>();
-        cardGameSeat = GetComponent<CardGameSeat>();
-        turnGameSeat.onSeatOccupy += SeatOccupied;
+        networkGameSeat.onSeatOccupied += () =>
+        {
+            ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
+        };
+
+        networkGameSeat.onSeatVaccated += () =>
+        {
+            ServerClientBridge.ins.onServerMsgRecieved -= OnServerMsgRecieved;
+        };
     }
 
-    void SeatOccupied()
-    {
-        Room.ins.onRoomPropertiesChanged += OnRoomPropertiesChanged;
-    }
+    
 
-    public void OnRoomPropertiesChanged(ExitGames.Client.Photon.Hashtable properties)
+    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable properties)
     {
         if (properties.ContainsKey("cardsDistributed"))
         {
             int dealerIndex = (int)ph.GetRoomData("dealer");
-            if (dealerIndex == turnGameSeat.GetSeatIndex())
+            if (dealerIndex == networkGameSeat.GetSeatIndex())
             { MakeMove("S-BLIND", (float)ph.GetRoomData("minBet")); }
 
-            if (TurnGame.ins.GetNextTurnIndex(dealerIndex) == turnGameSeat.GetSeatIndex())
+            if (TurnGame.ins.GetNextTurnIndex(dealerIndex) == networkGameSeat.GetSeatIndex())
             { MakeMove("B-BLIND", (float)ph.GetRoomData("minBet") * 2); }
         }
 
         if (properties["turn"] != null)
         {
-            if ((int)properties["turn"] == turnGameSeat.GetSeatIndex() && turnGameSeat.player.ActorNumber < 0 && ph.IsMasterClient()) { CreateMoveForBot(); }
+            if ((int)properties["turn"] == networkGameSeat.GetSeatIndex() && networkGameSeat.player.ActorNumber < 0 && ph.IsMasterClient()) { CreateMoveForBot(); }
         }
 
         if (properties["roundEnd"] != null) 
         {
-            Vector3 from = turnGameSeat.chips.transform.position;
-            turnGameSeat.moveAndBetInfo.gameObject.SetActive(false);
-            AnimUtils.Transform(turnGameSeat.chips.transform, from, TurnGame.ins.tableChips.transform.position, 1, Space.World, turnGameSeat.betAnimCurve, ()=> 
+            Vector3 from = networkGameSeat.chips.transform.position;
+            networkGameSeat.moveAndBetInfo.gameObject.SetActive(false);
+            AnimUtils.Transform(networkGameSeat.chips.transform, from, NetworkGameClient.ins.tableChips.transform.position, 1, Space.World, GameUtils.ins.easeIn, ()=> 
             {
-                TurnGame.ins.tablePot.TakeAmount(turnGameSeat.moveAndBetInfo.bet, turnGameSeat.moveAndBetInfo.bet.GetPotAmount());
-                TurnGame.ins.tableChips.SetActive(true);
-                turnGameSeat.chips.transform.position = from;
-                turnGameSeat.chips.SetActive(false);
+                NetworkGameClient.ins.tablePot.TakeAmount(networkGameSeat.moveAndBetInfo.bet, networkGameSeat.moveAndBetInfo.bet.GetPotAmount());
+                NetworkGameClient.ins.tableChips.SetActive(true);
+                networkGameSeat.chips.transform.position = from;
+                networkGameSeat.chips.SetActive(false);
                 //Utils.InvokeDelayedAction(.25f,()=> {  });
             });
         }
     }
 
-    void MakeMove(string moveType, float amount = 0)
+    public void MakeMove(string moveType, float amount = 0)
     {
-        turnGameSeat.moveAndBetInfo.MakeMove(moveType);
-        turnGameSeat.moveAndBetInfo.MakeBet(turnGameSeat.playerInfo.balance, amount);
-        turnGameSeat.chips.SetActive(true);
+        networkGameSeat.moveAndBetInfo.MakeMove(moveType);
+        networkGameSeat.moveAndBetInfo.MakeBet(networkGameSeat.playerInfo.balance, amount);
+        networkGameSeat.chips.SetActive(true);
     }
 
     void CreateMoveForBot()
     {
         Utils.InvokeDelayedAction(Random.Range(1.5f,TurnGame.ins.turnTime*.8f), () =>
         {
-            float currentBet = (float)ph.GetRoomData("currentBet");
+            /*float currentBet = (float)ph.GetRoomData("currentBet");
             float playerBet = TurnGame.ins.playersBets[(int)ph.GetRoomData("turn")];
 
             int rand = Random.Range(1, 11);
@@ -90,7 +94,7 @@ public class PokerSeat : MonoBehaviour
             ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
             data.Add("moveMade", moveName);
             if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
-            ph.SetRoomData(data);
+            ph.SetRoomData(data);*/
 
         });
         

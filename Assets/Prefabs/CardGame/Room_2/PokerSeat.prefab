@@ -1736,6 +1736,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7731550421596076026}
+  - component: {fileID: 6831478446268133144}
   - component: {fileID: 7731550421596076027}
   - component: {fileID: -2528065449964639043}
   - component: {fileID: 4327420843366553448}
@@ -1768,6 +1769,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6831478446268133144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7731550421596076029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28b5685664760bc4e898efcf257e7d68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInfo: {fileID: 0}
+  moveAndBetInfo: {fileID: 0}
+  character: {fileID: 8471280356393664130}
+  cameraPos: {fileID: 7731550422253010143}
+  chips: {fileID: 7731550423155454131}
+  actorNo: 0
 --- !u!114 &7731550421596076027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1780,12 +1799,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1052d28e0b8dd3641a2dced27e077237, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInfo: {fileID: 0}
-  moveAndBetInfo: {fileID: 0}
-  betSound: {fileID: 8300000, guid: 282d1ba73e96b8e44b26ee8eefedc805, type: 3}
-  character: {fileID: 8471280356393664130}
-  cameraPos: {fileID: 7731550422253010143}
-  chips: {fileID: 7731550423155454131}
+  networkGameSeat: {fileID: 6831478446268133144}
   timer: {fileID: 7731550423193999082}
   timer3D: {fileID: 7731550423193999082}
 --- !u!114 &-2528065449964639043
@@ -1800,6 +1814,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6eb647f55a922e94db4949c6c79b7808, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkGameSeat: {fileID: 6831478446268133144}
+  turnGameSeat: {fileID: 7731550421596076027}
   cards: {fileID: 5850676779019112923}
   cards3D: {fileID: 5850676779019112923}
   cardsIndexes: []
@@ -1815,6 +1831,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1db0b0e269f91bd4f9d27e5cf18f5783, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkGameSeat: {fileID: 6831478446268133144}
+  turnGameSeat: {fileID: 7731550421596076027}
+  cardGameSeat: {fileID: -2528065449964639043}
 --- !u!1 &7731550421813216361
 GameObject:
   m_ObjectHideFlags: 0

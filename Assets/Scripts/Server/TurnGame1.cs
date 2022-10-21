@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TurnGame : MonoBehaviour
+public class TurnGame1 : MonoBehaviour
 {
-    public static TurnGame ins;
+    public static TurnGame1 ins;
     void Awake() { ins = this; }
 
     public Transform cam;
@@ -29,7 +29,9 @@ public class TurnGame : MonoBehaviour
     public Action onGameStart;
     public Action onGameRestart;
 
+    [Header("Assigned During Game -")]
     public int[] seats;
+    public int dealer = -1;
     public bool[] turnEligiblePlayers;
     public bool[] turnRecievedPlayers;
     public float[] playersBets;
@@ -38,8 +40,26 @@ public class TurnGame : MonoBehaviour
 
     private Coroutine waitForTurnCoroutine;
 
+    public Action<int> onDealerSet;
+
     void Start()
     {
+        dealer = -1;
+
+        NetworkGame.ins.onGameStart += () =>
+        {
+            turnEligiblePlayers = new bool[NetworkGame.ins.seats.Length];
+            for (int i = 0; i < NetworkGame.ins.seats.Length; i++) { if (NetworkGame.ins.seats[i] != 0) { turnEligiblePlayers[i] = true; } }
+            NetworkGame.ins.SyncData("turnEligiblePlayers", turnEligiblePlayers);
+
+            dealer = GetNextTurnIndex((int)ph.GetRoomData("dealer"));
+            NetworkGame.ins.SyncData("dealer", dealer);
+            onDealerSet?.Invoke(dealer);
+        };
+
+
+
+
         tablePot.SetPotAmount(0);
 
         if (User.localUser != null)
@@ -88,8 +108,8 @@ public class TurnGame : MonoBehaviour
             seats = (int[])hashtable["seats"];
             for (int i = 0; i < seats.Length; i++)
             {
-                if (seats[i] != 0 && turnGameSeats[i].player == null) { PlayerEnteredTable(seats[i], i); }
-                if (seats[i] == 0 && turnGameSeats[i].player != null) { PlayerLeftTable(i); }
+                //if (seats[i] != 0 && turnGameSeats[i].player == null) { PlayerEnteredTable(seats[i], i); }
+                //if (seats[i] == 0 && turnGameSeats[i].player != null) { PlayerLeftTable(i); }
             }
         }
 
@@ -152,8 +172,8 @@ public class TurnGame : MonoBehaviour
         ph.SetRoomData("seats", seats);
     }
 
-    void PlayerEnteredTable(int actorNo, int seatIndex) { turnGameSeats[seatIndex].OccupySeat(ph.GetPlayer(actorNo)); }
-    void PlayerLeftTable(int seatIndex) { turnGameSeats[seatIndex].VaccateSeat(); }
+    //void PlayerEnteredTable(int actorNo, int seatIndex) { turnGameSeats[seatIndex].OccupySeat(ph.GetPlayer(actorNo)); }
+    //void PlayerLeftTable(int seatIndex) { turnGameSeats[seatIndex].VaccateSeat(); }
 
     IEnumerator StartGameCounter(int startFrom)
     {
@@ -207,7 +227,7 @@ public class TurnGame : MonoBehaviour
 
     public TurnGameSeat GetTurnGameSeat(Player player)
     {
-        for (int i = 0; i < turnGameSeats.Count; i++) { if (turnGameSeats[i].player == player) { return turnGameSeats[i]; } }
+        //for (int i = 0; i < turnGameSeats.Count; i++) { if (turnGameSeats[i].player == player) { return turnGameSeats[i]; } }
         return null;
     }
     
@@ -230,10 +250,10 @@ public class TurnGame : MonoBehaviour
         int count = 0;
         for (int i = 0; i < turnGameSeats.Count; i++)
         {
-            if (turnGameSeats[i].player != null)
-            {
-                if ((bool)ph.GetPlayerData(turnGameSeats[i].player, "turnEligible")) { count += 1; }
-            }
+            //if (turnGameSeats[i].player != null)
+            //{
+           //     if ((bool)ph.GetPlayerData(turnGameSeats[i].player, "turnEligible")) { count += 1; }
+           // }
         }
         return count;
     }

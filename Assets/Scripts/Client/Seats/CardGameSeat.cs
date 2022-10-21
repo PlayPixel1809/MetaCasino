@@ -7,35 +7,38 @@ using UnityEngine.UI;
 
 public class CardGameSeat : MonoBehaviour
 {
+    public NetworkGameSeat networkGameSeat;
+    public TurnGameSeat turnGameSeat;
+
     public CardsHolder cards;
     public CardsHolder cards3D;
 
-    public string[] cardsIndexes; 
+    public string[] cardsIndexes;
 
-    private TurnGameSeat turnGameSeat;
+    
 
     void Start()
     {
-        turnGameSeat = GetComponent<TurnGameSeat>();
-        turnGameSeat.onSeatOccupy += SeatOccupied;
+        networkGameSeat.onSeatOccupied += () =>
+        {
+            if (networkGameSeat.player.IsLocal) { cards = CardGame.ins.lpCards; }
+
+            ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
+        };
+
+        networkGameSeat.onSeatVaccated += () =>
+        {
+            ServerClientBridge.ins.onServerMsgRecieved -= OnServerMsgRecieved;
+        };
     }
 
-    void SeatOccupied()
-    {
-        if (turnGameSeat.player.IsLocal) { cards = CardGame.ins.lpCards; }
-        
-        Room.ins.onRoomPropertiesChanged += OnRoomPropertiesChanged;
-    }
-    
 
-    public void OnRoomPropertiesChanged(ExitGames.Client.Photon.Hashtable properties)
+    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable properties)
     {
         if (properties["playersCards"] != null)
         {
-            
-
             CardGame.ins.playersCards = (string[])properties["playersCards"];
-            string[] cardsIndexes = CardGame.ins.playersCards[turnGameSeat.GetSeatIndex()].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            string[] cardsIndexes = CardGame.ins.playersCards[networkGameSeat.GetSeatIndex()].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
             StartCoroutine("GetCards", cardsIndexes);
         }

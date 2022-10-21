@@ -19,16 +19,12 @@ public class BotManager : MonoBehaviourPunCallbacks
 
     void Start()
     {
-        Utils.FrameDelayedAction(() =>
+        NetworkRoom.ins.onRoomCreated += CreateInitialBots;
+
+        TurnGame.ins.onTurn += (s) =>
         {
-            Room.ins.onRoomCreated += CreateInitialBots;
-            
-        },1);
-
-
-       /* Room.onRoomCreated += CreateInitialBots;
-        CardGame.onGameStart += CreateGameplayBots;
-        CardGame.onGameRestart += CreateGameRestartBots;*/
+            if (NetworkGame.ins.seats[s] < 0) { CreateMoveForBot(s); }
+        };
     }
 
     public Player GetBot(int botIndex)
@@ -80,21 +76,61 @@ public class BotManager : MonoBehaviourPunCallbacks
 
     void CreateBot()
     {
-        List<KeyValue> botProperties = new List<KeyValue>() { new KeyValue() { key = "username", obj = "Bot"} };
-        onBotInitiated?.Invoke(botProperties);
+        List<int> seatsList = new List<int>();
+        for (int i = 0; i < NetworkGame.ins.seats.Length; i++) { seatsList.Add(NetworkGame.ins.seats[i]); }
 
         int botRoomIndex = 0;
         for (int i = -1; i > -100; i--)
         {
-            if (!Room.ins.GetRoomProperties().ContainsKey("bot" + i + "username")) 
+            if (!seatsList.Contains(i)) 
             { 
                 botRoomIndex = i; 
                 break; 
             }
         }
-        for (int i = 0; i < botProperties.Count; i++) { ph.SetRoomData("bot" + botRoomIndex + botProperties[i].key, botProperties[i].GetVal()); }
 
-        onBotCreated?.Invoke(botRoomIndex);
+        ph.SetRoomData("bot" + botRoomIndex + "username", "Bot " + MathF.Abs(botRoomIndex));
+        ph.SetRoomData("bot" + botRoomIndex + "balance", (float)100000);
+
+        NetworkRoom.ins.OnPlayerEnteredRoom(new Player() { ActorNumber = botRoomIndex });
+    }
+
+
+    void CreateMoveForBot(int seatIndex)
+    {
+        Utils.InvokeDelayedAction(UnityEngine.Random.Range(1.5f, TurnGame.ins.turnTime * .8f), () =>
+        {
+            float currentBet = Poker.ins.GetHighestBet();
+            float playerBet = Poker.ins.playersBetsForRound[seatIndex]; 
+
+            int rand = UnityEngine.Random.Range(1, 11);
+
+            string moveName = string.Empty;
+            float moveAmount = 0;
+
+            if (rand < 2) { moveName = "FOLD"; }
+            if (rand > 0 && rand < 7)
+            {
+                if (playerBet == currentBet) { moveName = "CHECK"; }
+                if (playerBet < currentBet) { moveName = "CALL"; moveAmount = currentBet - playerBet; }
+            }
+
+            if (rand > 6)
+            {
+                moveAmount = (currentBet - playerBet) + 500.0f * UnityEngine.Random.Range(1, 6);
+                if (currentBet == 0) { moveName = "BET"; } else { moveName = "RAISE"; }
+            }
+
+            float playerBalance = (float)ph.GetPlayerData(NetworkGame.ins.seats[seatIndex], "balance");
+            if (playerBalance < moveAmount) { moveAmount = playerBalance; moveName = "ALL-IN"; }
+
+            ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
+            data.Add("moveMade", moveName);
+            if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
+
+            ServerClientBridge.ins.onClientMsgRecieved.Invoke(NetworkGame.ins.seats[seatIndex], data);
+        });
+
     }
 
 }

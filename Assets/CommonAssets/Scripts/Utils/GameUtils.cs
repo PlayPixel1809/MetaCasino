@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class GameUtils : MonoBehaviour
 {
     public static GameUtils ins;
+
     void Awake() 
     { 
         ins = this;
@@ -21,12 +22,17 @@ public class GameUtils : MonoBehaviour
         if (NoticeUtils.ins == null && instantiateNotifications) { Instantiate(Resources.Load(notification)); }
     }
 
+
+
     public AudioSource audioSource;
     public AudioClip btnSoundDefault;
 
     public Image fadeSprite;
 
     public bool exitOnEscape;
+
+    public AnimationCurve easeIn;
+    public AnimationCurve easeOut;
 
     public bool instantiateAudioUtils = true;
     public bool instantiateNotifications = true;

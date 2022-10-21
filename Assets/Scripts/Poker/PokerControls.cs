@@ -20,11 +20,6 @@ public class PokerControls : MonoBehaviour
     private float maxRaiseAmount;
     private float minRaiseAmount;
 
-    void OnEnable()
-    {
-        EvaluateCallBtn();
-        EvaluateRaiseBtn();
-    }
 
     public void PlayerControlBtn(Transform btn)
     {
@@ -45,7 +40,7 @@ public class PokerControls : MonoBehaviour
         ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
         data.Add("moveMade", moveName);
         if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
-        ph.SetRoomData(data);
+        ServerClientBridge.NotifyServer(data);
     }
 
     public void RaiseAmountUpBtn()
@@ -63,12 +58,8 @@ public class PokerControls : MonoBehaviour
     }
 
    
-    public void EvaluateCallBtn()
+    public void EvaluateCallBtn(float currentBet, float playerBet, float playerBalance)
     {
-        float currentBet = (float)ph.GetRoomData("currentBet");
-        float playerBet = TurnGame.ins.playersBets[(int)ph.GetRoomData("turn")];
-        float playerBalance = (float)ph.GetLocalPlayerData("balance");
-
         if (currentBet == 0 || playerBet == currentBet) 
         {
             callAmount = 0;
@@ -88,11 +79,8 @@ public class PokerControls : MonoBehaviour
     }
 
 
-    public void EvaluateRaiseBtn()
+    public void EvaluateRaiseBtn(float currentBet, float playerBalance)
     {
-        float currentBet = (float)ph.GetRoomData("currentBet");
-        float playerBalance = (float)ph.GetLocalPlayerData("balance");
-
         string btntext = "RAISE";
         if (currentBet == 0) { btntext = "BET"; }
         

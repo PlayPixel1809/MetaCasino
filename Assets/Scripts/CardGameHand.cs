@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 [System.Serializable]
 public class CardGameHand
 {
+    public CardGameHand() { }
     public CardGameHand(List<int> cardsIndexes)
     {
         this.cardsIndexes = cardsIndexes;
@@ -38,18 +39,18 @@ public class CardGameHand
     public List<int> cardsIndexes;
     public List<int> cardsSuits = new List<int>();
     public List<int> cardsNo;
-    public List<int> oneOfKinds   = new List<int>();
-    public List<int> twoOfKinds  = new List<int>();
+    public List<int> oneOfKinds = new List<int>();
+    public List<int> twoOfKinds = new List<int>();
     public List<int> threeOfKinds = new List<int>();
-    public List<int> fourOfKinds  = new List<int>();
+    public List<int> fourOfKinds = new List<int>();
 
     int GetCardNo(int cardIndex)
     {
-        int cardNo = cardIndex - 13 * Mathf.FloorToInt(cardIndex / 13.01f);
+        int cardNo = cardIndex - 13 * Convert.ToInt32(Math.Floor(cardIndex / 13.01f));
         if (cardNo == 1) { cardNo = 14; }
         return cardNo;
     }
-    int GetCardSuit(int cardIndex) { return Mathf.FloorToInt(cardIndex / 13.01f); }
+    int GetCardSuit(int cardIndex) { return Convert.ToInt32(Math.Floor(cardIndex / 13.01f)); }
 
     public bool AreCardsSameColor()
     {

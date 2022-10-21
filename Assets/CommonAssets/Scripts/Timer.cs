@@ -10,7 +10,7 @@ public class Timer : MonoBehaviour
     public void StartTimer(float time, Action onTimerComplete)
     {
         gameObject.SetActive(true);
-        StartCoroutine(TimerCoroutine(time, onTimerComplete));
+        StartCoroutine(TimerCoroutine(time, onTimerComplete)); 
     }
     
     IEnumerator TimerCoroutine(float time, Action onTimerComplete)

@@ -1,4 +1,4 @@
-﻿using ExitGames.Client.Photon;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -6,9 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
+public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
 {
-    public static Room ins;
+    public static NetworkRoomClient ins;
     void Awake() { ins = this; }
 
     public string defaultEmail;
@@ -19,19 +19,17 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
     public List<KeyValue> initialProperties;
     public List<string> matchmakingProperties;
     public int maxPlayers = 5;
-    public float minBet = 1000;
-    public float minBalance = 10000;
+    
 
     public ExitGames.Client.Photon.Hashtable startProperties = new ExitGames.Client.Photon.Hashtable();
 
     public Action onConnectedToMaster;
     public Action onRoomCreated;
-    public Action<Player> onRoomJoined;
+    public Action onRoomJoined;
     public Action<ExitGames.Client.Photon.Hashtable> onRoomPropertiesChanged;
     public Action onRoomLeft;              // This runs when local player leaves current room
-    public Action<Player> onPlayerEnteredRoom;
-    public Action<Player> onPlayerLeftRoom; // This runs when some other player leaves the room
-    
+    private Action onRoomLeft_;
+
     public Action<string, string, string, string> onEvent;
 
     new void OnEnable() { PhotonNetwork.AddCallbackTarget(this); }
@@ -50,8 +48,8 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         else
         {
             User.onCreateLocalUser += Initiate;
-             
-            if (loginInfoFromPlayerPrefs) 
+
+            if (loginInfoFromPlayerPrefs)
             { User.LoginAndCreateLocalUser(PlayerPrefs.GetString("email"), PlayerPrefs.GetString("password")); }
             else
             { User.LoginAndCreateLocalUser(defaultEmail, defaultPassword); }
@@ -83,7 +81,7 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         NoticeUtils.ins.ShowLoadingAlert("Reconnecting to previous room");
         PhotonNetwork.ReconnectAndRejoin();
     }
-    
+
     public void JoinRoom()
     {
         Debug.Log("JoiningRandomRoom");
@@ -98,10 +96,10 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         PhotonNetwork.JoinRandomRoom(expectedProps, Convert.ToByte(maxPlayers));
     }
 
-    public override void OnJoinRoomFailed(short returnCode, string message) 
+    public override void OnJoinRoomFailed(short returnCode, string message)
     {
         Debug.Log("OnJoinRoomFailed");
-        
+
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message)
@@ -111,11 +109,11 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         CreateRoom();
     }
 
-    public override void OnJoinedRoom() 
+    public override void OnJoinedRoom()
     {
         Debug.Log("OnJoinedRoom");
         NoticeUtils.ins.HideLoadingAlert();
-        onRoomJoined?.Invoke(PhotonNetwork.LocalPlayer);
+        onRoomJoined?.Invoke();
     }
 
     public void CreateRoom()
@@ -125,7 +123,7 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
 
         RoomOptions roomOptions = new RoomOptions() { MaxPlayers = 2 };
 
-        startProperties.Add("status",string.Empty);
+        startProperties.Add("status", string.Empty);
         startProperties.Add("data", string.Empty);
         roomOptions.CustomRoomPropertiesForLobby = matchmakingProperties.ToArray();
         roomOptions.CustomRoomProperties = startProperties;
@@ -142,22 +140,23 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         onRoomCreated?.Invoke();
     }
 
-    public void LeaveGameRoom(Action onRoomLeft) 
+    public void LeaveGameRoom(Action onRoomLeft)
     {
-        this.onRoomLeft = onRoomLeft; 
+        this.onRoomLeft_ = onRoomLeft;
         PhotonNetwork.LeaveRoom();
     }
 
-    public override void OnLeftRoom() 
+    public override void OnLeftRoom()
     {
         ph.RemovePlayerData(PhotonNetwork.LocalPlayer);
-        onRoomLeft?.Invoke(); 
+        onRoomLeft?.Invoke();
+        onRoomLeft_?.Invoke();
     }
 
-    public static void SendEvent(string evClass, string evName, string data = "") 
+    public static void SendEvent(string evClass, string evName, string data = "")
     {
         Dictionary<byte, object> dictionary = new Dictionary<byte, object>() { { 0, evClass }, { 1, evName }, { 2, data } };
-        
+
         PhotonNetwork.RaiseEvent(0, dictionary, RaiseEventOptions.Default, SendOptions.SendReliable);
         Debug.Log("Event Sent: evName: " + evName + ", Data: " + data);
     }
@@ -168,31 +167,21 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         if (photonEvent.Code == 0)
         {
-            Dictionary<byte, object> data = (Dictionary<byte, object>)photonEvent.CustomData;
+            /*Dictionary<byte, object> data = (Dictionary<byte, object>)photonEvent.CustomData;
             string evSender = ph.GetUsername(photonEvent.Sender);
             string evClass = (string)data[0];
-            string evName  = (string)data[1];
-            string evData  = (string)data[2];
+            string evName = (string)data[1];
+            string evData = (string)data[2];
             onEvent?.Invoke(evSender, evClass, evName, evData);
-            Debug.Log("Event Recieved: evSender: " + evSender + ", evName: " + evName);
+            Debug.Log("Event Recieved: evSender: " + evSender + ", evName: " + evName);*/
         }
     }
 
-    public override void OnPlayerEnteredRoom(Player otherPlayer) 
-    { 
-        onPlayerEnteredRoom?.Invoke(otherPlayer);
-        onEvent?.Invoke(string.Empty, otherPlayer.NickName, "PlayerEnteredRoom", string.Empty);
-    }
     
-    public override void OnPlayerLeftRoom(Player otherPlayer) 
-    { 
-        onPlayerLeftRoom?.Invoke(otherPlayer);
-        onEvent?.Invoke(string.Empty, otherPlayer.NickName, "PlayerLeftRoom", string.Empty);
-    }
 
-    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged) 
-    { 
-        onRoomPropertiesChanged?.Invoke(propertiesThatChanged); 
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    {
+        onRoomPropertiesChanged?.Invoke(propertiesThatChanged);
     }
 
     public static bool IsConnectedToMaster()
@@ -221,4 +210,6 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         else
         { return startProperties; }
     }
+
+    
 }

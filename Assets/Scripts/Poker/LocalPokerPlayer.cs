@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class LocalPokerPlayer : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public static LocalPokerPlayer ins;
+    void Awake() { ins = this; }
 
-    // Update is called once per frame
-    void Update()
+    public GameObject lpControls;
+    public PlayerInfoUi lpInfoUi;
+    public Timer lpTimer;
+
+
+    public void SetInfo()
     {
         
     }
