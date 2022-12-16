@@ -10,6 +10,8 @@ public class Card : MonoBehaviour
     public Image cardSuitImage;
     public Text cardNoTxt;
 
+    public GameObject outline;
+
     [HideInInspector] public int cardIndex = 0;
     [HideInInspector] public Deck deck;
 
@@ -72,6 +74,7 @@ public class Card : MonoBehaviour
         cardBack.gameObject.SetActive(true);
         cardSuitImage.gameObject.SetActive(false);
         cardNoTxt.gameObject.SetActive(false);
+        RemoveHighlight();
     }
 
     public void RevealCard()
@@ -81,6 +84,16 @@ public class Card : MonoBehaviour
         cardBack.gameObject.SetActive(false);
         cardSuitImage.gameObject.SetActive(true);
         cardNoTxt.gameObject.SetActive(true);
+    }
+
+    public void HighlightCard()
+    {
+        outline.SetActive(true);
+    }
+
+    public void RemoveHighlight()
+    {
+        outline.SetActive(false);
     }
 
     int GetCardNo(int cardIndex)

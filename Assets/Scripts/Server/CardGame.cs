@@ -16,7 +16,6 @@ public class CardGame : MonoBehaviour
 
     public int cardsPerPlayer = 2;
     //public Deck deck;
-    public CardsHolder lpCards;
 
 
     public Action onCardsDistributed;
@@ -36,7 +35,7 @@ public class CardGame : MonoBehaviour
 
         NetworkGame.ins.onGameStart += () =>
         {
-            foldedPlayers = new bool[NetworkGame.ins.seats.Length];
+            foldedPlayers = new bool[NetworkRoom.ins.seats.Length];
             NetworkGame.ins.SyncData("foldedPlayers", foldedPlayers);
         };
 
@@ -51,10 +50,10 @@ public class CardGame : MonoBehaviour
 
     void OnClientMsgRecieved(int senderActorNo, ExitGames.Client.Photon.Hashtable hashtable)
     {
-        if (hashtable.ContainsKey("moveMade") && (string)hashtable["moveMade"] == "Fold")
+        if (hashtable.ContainsKey("moveMade") && (string)hashtable["moveMade"] == "FOLD")
         {
-            TurnGame.ins.turnEligiblePlayers[NetworkGame.ins.GetSeatIndex(senderActorNo)] = false;
-            foldedPlayers[NetworkGame.ins.GetSeatIndex(senderActorNo)] = true;
+            TurnGame.ins.turnEligiblePlayers[TurnGame.ins.turn] = false;
+            foldedPlayers[TurnGame.ins.turn] = true;
 
             NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", TurnGame.ins.turnEligiblePlayers }, { "foldedPlayers", foldedPlayers } });
         }
@@ -77,7 +76,7 @@ public class CardGame : MonoBehaviour
 
     void DistributeCards()
     {
-        playersCards = new string[NetworkGame.ins.seats.Length];
+        playersCards = new string[NetworkRoom.ins.seats.Length];
         for (int i = 0; i < cardsPerPlayer; i++)
         {
             for (int j = 0; j < TurnGame.ins.turnEligiblePlayers.Length; j++)
@@ -106,7 +105,7 @@ public class CardGame : MonoBehaviour
     public int GetNonFoldedPlayersCount()
     {
         int count = 0;
-        for (int i = 0; i < foldedPlayers.Length; i++) { if (!foldedPlayers[i]) { count += 1; } }
+        for (int i = 0; i < foldedPlayers.Length; i++) { if (playersCards[i] != "Null" && !foldedPlayers[i]) { count += 1; } }
         return count;
     }
 
@@ -120,7 +119,7 @@ public class CardGame : MonoBehaviour
             cards.Add(card);
         }
 
-        if (syncDeckData) { NetworkGame.ins.SyncData("deck", deck); }
+        if (syncDeckData) { NetworkGame.ins.SyncData("deck", deck.ToArray()); }
         return cards;
     }
 
@@ -128,7 +127,13 @@ public class CardGame : MonoBehaviour
     {
         string[] cardsArray = playersCards[seatIndex].Split(new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries);
         List<int> cards = new List<int>();
-        for (int i = 0; i < cardsArray.Length; i++) { cards.Add(int.Parse(cardsArray[i])); }
+        for (int i = 0; i < cardsArray.Length; i++)  { cards.Add(int.Parse(cardsArray[i]));  }
         return cards;
+    }
+
+    public bool IsSeatFolded(int seatIndex)
+    {
+        if (playersCards[seatIndex] != "Null" && !foldedPlayers[seatIndex]) { return false; }
+        else { return true; }
     }
 }

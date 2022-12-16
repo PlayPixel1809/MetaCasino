@@ -13,47 +13,43 @@ public class NetworkGame : MonoBehaviour
     public int minPlayersToStartGame = 2;
     public int gameStartTime = 5;
 
+    public Action onGameStart;
+
     [Header("Assigned During Game -")]
-    public int[] seats; // Sent To Clients
+    public bool[] gamePlayingSeats; // Sent To Clients
     public int gameStartCounter; // Sent To Clients
     public float[] playersBets;
 
-    public Action onGameStart;
+    private NetworkRoomSeat networkRoomSeat;
 
     void Start()
     {
-        seats = new int[NetworkRoomClient.ins.maxPlayers];
+        networkRoomSeat = GetComponent<NetworkRoomSeat>();
 
-        NetworkRoom.ins.onPlayerEnteredRoom += (p) => { AssignSeatToPlayer(p.ActorNumber); };
-        NetworkRoom.ins.onPlayerLeftRoom += OnPlayerLeftRoom;
+        NetworkRoom.ins.onSeatAssigned += OnSeatAssigned;
+        NetworkRoom.ins.onSeatVaccated += OnSeatVaccated;
 
         ServerClientBridge.ins.onClientMsgRecieved += OnClientMsgRecieved;
     }
 
+   
+    void OnSeatAssigned(int seatIndex)
+    {
+        if (NetworkRoom.ins.GetFilledSeatsCount() == minPlayersToStartGame) { StartCoroutine("StartGameCounter", gameStartTime); }
+    }
+
+    void OnSeatVaccated(int seatIndex)
+    {
+
+    }
+
     void OnClientMsgRecieved(int sender, ExitGames.Client.Photon.Hashtable hashtable)
     {
-        
+
 
     }
 
 
-    public void AssignSeatToPlayer(int actorNumber)
-    {
-        if (!ph.IsMasterClient()) { return; }
-
-
-        List<int> availableSeats = new List<int>();
-        for (int i = 0; i < seats.Length; i++) { if (seats[i] == 0) { availableSeats.Add(i); } }
-        int randSeat = availableSeats[UnityEngine.Random.Range(0, availableSeats.Count)];
-        availableSeats.Remove(randSeat);
-        seats[randSeat] = actorNumber;
-
-        SyncData("seats", seats);
-        ServerClientBridge.NotifyClients("seats", seats);
-
-        int filledSeats = seats.Length - availableSeats.Count;
-        if (filledSeats == minPlayersToStartGame) { StartCoroutine("StartGameCounter", gameStartTime); }
-    }
 
     IEnumerator StartGameCounter(int startFrom)
     {
@@ -64,49 +60,18 @@ public class NetworkGame : MonoBehaviour
             yield return new WaitForSeconds(1);
         }
 
-        playersBets = new float[seats.Length];
-        SyncData(new ExitGames.Client.Photon.Hashtable() { { "playersBets", playersBets } });
+        for (int i = 0; i < NetworkRoom.ins.seats.Length; i++)
+        {
+            if (NetworkRoom.ins.seats[i] != 0) { gamePlayingSeats[i] = true; }
+        }
+
+        playersBets = new float[NetworkRoom.ins.seats.Length];
+        SyncData(new ExitGames.Client.Photon.Hashtable() { { "playersBets", playersBets }, { "gamePlayingSeats", gamePlayingSeats } });
 
         onGameStart?.Invoke();
     }
 
-    void OnPlayerLeftRoom(Player player)
-    {
-        if (!ph.IsMasterClient()) { return; }
-
-        int[] seats = (int[])ph.GetRoomData("seats");
-        for (int i = 0; i < seats.Length; i++)
-        {
-            if (seats[i] == player.ActorNumber)
-            {
-                seats[i] = 0;
-                ph.SetRoomData("seats", seats);
-                return;
-            }
-        }
-        ph.SetRoomData("seats", seats);
-    }
-
-    public int GetFilledSeatsCount()
-    {
-        int count = 0;
-        for (int i = 0; i < seats.Length; i++)
-        {
-            if (seats[i] != 0) { count += 1; }
-        }
-        return count;
-    }
-
-    
-
-    public int GetSeatIndex(int actorNo)
-    {
-        for (int i = 1; i < seats.Length; i++)
-        {
-            if (seats[i] == actorNo) { return i; }
-        }
-        return -1;
-    }
+   
 
     public float GetHighestBet()
     {
@@ -131,4 +96,6 @@ public class NetworkGame : MonoBehaviour
     {
         if (nonAuthoritativeServer) { ph.SetRoomData(data); }
     }
+
+    
 }

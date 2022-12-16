@@ -32,20 +32,14 @@ public class Deck : MonoBehaviour
         public Sprite club;
     }
 
-    public Card CreateNewCard(int cardIndex, CardsHolder cardsHolder)
+    public void CreateNewCard(int cardIndex, CardsHolder cardsHolder)
     {
         cardsDrawnCount += 1;
 
         GameUtils.ins.PlaySound(cardSound);
         deckModel.localScale = new Vector3(deckModel.localScale.x, Mathf.Lerp(0,1, (float)(52 - cardsDrawnCount )/ 52), deckModel.localScale.z);
-
-        Card cardClone = Instantiate(cardPrefab, cardSpawnPoint.position, cardSpawnPoint.rotation, cardSpawnPoint.parent);
-        cardClone.SetCard(cardIndex, this);
-
-        cardsHolder.AddCard(cardClone);
+        cardsHolder.AddCard(cardIndex);
         cardsHolders.Add(cardsHolder);
-
-        return cardClone;
     }
 
     public void Reset()

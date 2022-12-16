@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -20,35 +21,37 @@ public static class PokerHands
     }
 
     [System.Serializable]
-    public class WinningSeats
+    public class WinInfo
     {
         public WinTypes winType;
-        public List<int> winners;
+        public List<int> winners = new List<int>();
+        public List<int> winningCards = new List<int>();
     }
 
-    public static WinningSeats EvaluatePot(List<int> seats)
+    public static WinInfo GetWinningSeats(List<int> seats)
     {
         List<List<int>> hands = new List<List<int>>();
         for (int i = 0; i < seats.Count; i++) { hands.Add(CardGame.ins.GetPlayerCards(seats[i])); }
 
         WinningHands winningHands = GetWinningHands(hands);
-        WinningSeats winningSeats = new WinningSeats();
+        WinInfo winInfo = new WinInfo();
 
         for (int i = 0; i < winningHands.winners.Count; i++)
         {
             int winningHandIndex = hands.IndexOf(winningHands.winners[i]);
-            winningSeats.winners.Add(seats[winningHandIndex]);
+            winInfo.winningCards.AddRange(winningHands.winners[i]);
+            winInfo.winners.Add(seats[winningHandIndex]);
         }
-        winningSeats.winType = winningHands.winType;
-        return winningSeats;
+        winInfo.winType = winningHands.winType;
+        return winInfo;
     }
 
-    public static WinningSeats EvaluatePot(string seats)
+    public static WinInfo GetWinningSeats(string seats)
     {
         string[] seatsArray = seats.Split(new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries);
         List<int> seatsList = new List<int>();
         for (int i = 0; i < seatsArray.Length; i++) { seatsList.Add(int.Parse( seatsArray[i])); }
-        return EvaluatePot(seatsList);
+        return GetWinningSeats(seatsList);
     }
 
 
@@ -214,6 +217,16 @@ public static class PokerHands
             {
                 if (cards1[2] > cards2[2]) { return hand1; }
                 if (cards2[2] > cards1[2]) { return hand2; }
+                if (cards1[2] == cards2[2] && cards1.Count > 3)
+                {
+                    if (cards1[3] > cards2[3]) { return hand1; }
+                    if (cards2[3] > cards1[3]) { return hand2; }
+                    if (cards1[3] == cards2[3] && cards1.Count > 4)
+                    {
+                        if (cards1[4] > cards2[4]) { return hand1; }
+                        if (cards2[4] > cards1[4]) { return hand2; }
+                    }
+                }
             }
         }
         return null;

@@ -7,53 +7,43 @@ using UnityEngine.UI;
 
 public class CardGameSeat : MonoBehaviour
 {
-    public NetworkGameSeat networkGameSeat;
-    public TurnGameSeat turnGameSeat;
-
     public CardsHolder cards;
     public CardsHolder cards3D;
 
+    [Header("Assigned During Game -")]
     public string[] cardsIndexes;
 
-    
+
+    [HideInInspector] public NetworkRoomSeat networkRoomSeat;
+    [HideInInspector] public NetworkGameSeat networkGameSeat;
+    [HideInInspector] public TurnGameSeat turnGameSeat;
 
     void Start()
     {
-        networkGameSeat.onSeatOccupied += () =>
-        {
-            if (networkGameSeat.player.IsLocal) { cards = CardGame.ins.lpCards; }
+        networkRoomSeat = GetComponent<NetworkRoomSeat>();
+        networkGameSeat = GetComponent<NetworkGameSeat>();
+        turnGameSeat = GetComponent<TurnGameSeat>();
 
-            ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
+        networkRoomSeat.onSeatOccupied += () =>
+        {
+            
         };
 
-        networkGameSeat.onSeatVaccated += () =>
-        {
-            ServerClientBridge.ins.onServerMsgRecieved -= OnServerMsgRecieved;
-        };
     }
 
 
-    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable properties)
-    {
-        if (properties["playersCards"] != null)
-        {
-            CardGame.ins.playersCards = (string[])properties["playersCards"];
-            string[] cardsIndexes = CardGame.ins.playersCards[networkGameSeat.GetSeatIndex()].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
-            StartCoroutine("GetCards", cardsIndexes);
-        }
-    }
-
-    IEnumerator GetCards(string[] cardsIndexes)
+    public IEnumerator CreateCards(string[] cardsIndexes)
     {
-        
         this.cardsIndexes = cardsIndexes;
         for (int i = 0; i < cardsIndexes.Length; i++)
         {
             Deck.ins.CreateNewCard(int.Parse(cardsIndexes[i]), cards3D);
             yield return new WaitForSeconds(1);
         }
-        yield return new WaitForSeconds(1);
-        cards.CopyCards(cards3D);
+        
+        //cards.CopyCards(cards3D);
+
+        if (networkRoomSeat.player.IsLocal) { CardGameClient.ins.lpCards.CopyCards(cards3D, true); }
     }
 }

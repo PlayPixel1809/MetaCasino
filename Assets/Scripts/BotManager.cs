@@ -23,7 +23,7 @@ public class BotManager : MonoBehaviourPunCallbacks
 
         TurnGame.ins.onTurn += (s) =>
         {
-            if (NetworkGame.ins.seats[s] < 0) { CreateMoveForBot(s); }
+            //if (NetworkRoom.ins.seats[s] < 0) { CreateMoveForBot(s); }
         };
     }
 
@@ -77,7 +77,7 @@ public class BotManager : MonoBehaviourPunCallbacks
     void CreateBot()
     {
         List<int> seatsList = new List<int>();
-        for (int i = 0; i < NetworkGame.ins.seats.Length; i++) { seatsList.Add(NetworkGame.ins.seats[i]); }
+        for (int i = 0; i < NetworkRoom.ins.seats.Length; i++) { seatsList.Add(NetworkRoom.ins.seats[i]); }
 
         int botRoomIndex = 0;
         for (int i = -1; i > -100; i--)
@@ -90,7 +90,7 @@ public class BotManager : MonoBehaviourPunCallbacks
         }
 
         ph.SetRoomData("bot" + botRoomIndex + "username", "Bot " + MathF.Abs(botRoomIndex));
-        ph.SetRoomData("bot" + botRoomIndex + "balance", (float)100000);
+        ph.SetRoomData("bot" + botRoomIndex + "balance", (float)(-botRoomIndex * 40000));
 
         NetworkRoom.ins.OnPlayerEnteredRoom(new Player() { ActorNumber = botRoomIndex });
     }
@@ -121,14 +121,14 @@ public class BotManager : MonoBehaviourPunCallbacks
                 if (currentBet == 0) { moveName = "BET"; } else { moveName = "RAISE"; }
             }
 
-            float playerBalance = (float)ph.GetPlayerData(NetworkGame.ins.seats[seatIndex], "balance");
+            float playerBalance = (float)ph.GetPlayerData(NetworkRoom.ins.seats[seatIndex], "balance");
             if (playerBalance < moveAmount) { moveAmount = playerBalance; moveName = "ALL-IN"; }
 
             ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
             data.Add("moveMade", moveName);
             if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
 
-            ServerClientBridge.ins.onClientMsgRecieved.Invoke(NetworkGame.ins.seats[seatIndex], data);
+            ServerClientBridge.ins.onClientMsgRecieved.Invoke(NetworkRoom.ins.seats[seatIndex], data);
         });
 
     }

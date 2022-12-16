@@ -3,64 +3,67 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TurnGameSeat : MonoBehaviour
 {
-    public NetworkGameSeat networkGameSeat;
+    
 
+    public uiLabel moveMade;
+    
 
     public Timer timer;
     public Timer timer3D;
 
     public Action onTurnActive;
 
+    [HideInInspector] public NetworkRoomSeat networkRoomSeat;
+    [HideInInspector] public NetworkGameSeat networkGameSeat;
+
     void Start()
     {
-        networkGameSeat.onSeatOccupied += () =>
+        networkRoomSeat = GetComponent<NetworkRoomSeat>();
+        networkGameSeat = GetComponent<NetworkGameSeat>();
+
+
+        networkRoomSeat.onSeatOccupied += () =>
         {
-            if (networkGameSeat.player.IsLocal)
+            if (networkRoomSeat.player.IsLocal)
             {
                 timer = TurnGameClient.ins.lpTimer;
             }
-
-            ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
         };
 
-        networkGameSeat.onSeatVaccated += () =>
-        {
-            ServerClientBridge.ins.onServerMsgRecieved -= OnServerMsgRecieved;
-        };
     }
-
+    
     public void StartTurn()
     {
-        if (networkGameSeat.player.IsLocal) { NetworkGameClient.ins.lpControls.SetActive(true); }
-        timer.StartTimer(TurnGame.ins.turnTime, null);
-        timer3D.StartTimer(TurnGame.ins.turnTime, null);
+        NetworkGameClient.ins.lpControls.SetActive(true);
+        timer.StartTimer(TurnGameClient.ins.turnTime, null);
+        timer3D.StartTimer(TurnGameClient.ins.turnTime, null);
     }
 
-    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable properties)
+    public void MakeMove(string moveName, float amount = 0)
     {
-        if (properties["turn"] != null)
-        {
-            if ((int)properties["turn"] == networkGameSeat.GetSeatIndex())
-            {
-                timer.StartTimer(TurnGame.ins.turnTime, null);
-                timer3D.StartTimer(TurnGame.ins.turnTime, null);
-            }
-        }
+        moveMade.SetLabel(moveName);
 
-        if (properties["moveMadeBy"] != null && (int)properties["moveMadeBy"] == networkGameSeat.actorNo)
+        if (amount > 0)
         {
-            timer.gameObject.SetActive(false);
-            timer3D.gameObject.SetActive(false);
+            networkGameSeat.playerBalance.SubtractAmount(amount);
+            ph.ChangePlayerData(networkRoomSeat.player, "balance", -amount);
         }
-
-        
     }
-
 
     
 
+    public void MoveMade()
+    {
+        timer.gameObject.SetActive(false);
+        timer3D.gameObject.SetActive(false);
+    }
 
+    public void ResetMoveMade()
+    {
+        moveMade.Reset();
+    }
 }

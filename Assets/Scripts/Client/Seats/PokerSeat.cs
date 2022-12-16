@@ -5,62 +5,43 @@ using UnityEngine.UI;
 
 public class PokerSeat : MonoBehaviour
 {
-    public NetworkGameSeat networkGameSeat;
-    public TurnGameSeat turnGameSeat;
-    public CardGameSeat cardGameSeat;
+    
+    public Pocket roundBet;
+
+    [HideInInspector] public NetworkRoomSeat networkRoomSeat;
+    [HideInInspector] public NetworkGameSeat networkGameSeat;
+    [HideInInspector] public TurnGameSeat turnGameSeat;
+    [HideInInspector] public CardGameSeat cardGameSeat;
 
     void Start()
     {
-        networkGameSeat.onSeatOccupied += () =>
-        {
-            ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
-        };
-
-        networkGameSeat.onSeatVaccated += () =>
-        {
-            ServerClientBridge.ins.onServerMsgRecieved -= OnServerMsgRecieved;
-        };
+        networkRoomSeat = GetComponent<NetworkRoomSeat>();
+        networkGameSeat = GetComponent<NetworkGameSeat>();
+        turnGameSeat = GetComponent<TurnGameSeat>();
+        cardGameSeat = GetComponent<CardGameSeat>();
     }
+
 
     
 
-    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable properties)
+    public void DeactivateMoveInfo()
     {
-        if (properties.ContainsKey("cardsDistributed"))
+        if (turnGameSeat.moveMade.GetLabel() != "ALL IN" && turnGameSeat.moveMade.GetLabel() != "FOLD")
         {
-            int dealerIndex = (int)ph.GetRoomData("dealer");
-            if (dealerIndex == networkGameSeat.GetSeatIndex())
-            { MakeMove("S-BLIND", (float)ph.GetRoomData("minBet")); }
-
-            if (TurnGame.ins.GetNextTurnIndex(dealerIndex) == networkGameSeat.GetSeatIndex())
-            { MakeMove("B-BLIND", (float)ph.GetRoomData("minBet") * 2); }
-        }
-
-        if (properties["turn"] != null)
-        {
-            if ((int)properties["turn"] == networkGameSeat.GetSeatIndex() && networkGameSeat.player.ActorNumber < 0 && ph.IsMasterClient()) { CreateMoveForBot(); }
-        }
-
-        if (properties["roundEnd"] != null) 
-        {
-            Vector3 from = networkGameSeat.chips.transform.position;
-            networkGameSeat.moveAndBetInfo.gameObject.SetActive(false);
-            AnimUtils.Transform(networkGameSeat.chips.transform, from, NetworkGameClient.ins.tableChips.transform.position, 1, Space.World, GameUtils.ins.easeIn, ()=> 
-            {
-                NetworkGameClient.ins.tablePot.TakeAmount(networkGameSeat.moveAndBetInfo.bet, networkGameSeat.moveAndBetInfo.bet.GetPotAmount());
-                NetworkGameClient.ins.tableChips.SetActive(true);
-                networkGameSeat.chips.transform.position = from;
-                networkGameSeat.chips.SetActive(false);
-                //Utils.InvokeDelayedAction(.25f,()=> {  });
-            });
+            turnGameSeat.ResetMoveMade(); 
         }
     }
 
-    public void MakeMove(string moveType, float amount = 0)
+    public void SubmitRoundBet()
     {
-        networkGameSeat.moveAndBetInfo.MakeMove(moveType);
-        networkGameSeat.moveAndBetInfo.MakeBet(networkGameSeat.playerInfo.balance, amount);
-        networkGameSeat.chips.SetActive(true);
+        if (roundBet.GetAmount() > 0)
+        {
+            Vector3 from = roundBet.amountGraphic.transform.position;
+            AnimUtils.Transform(roundBet.amountGraphic.transform, from, NetworkGameClient.ins.gamePot.amountGraphic.transform.position, 1, Space.World, GameUtils.ins.easeIn, () =>
+            {
+                roundBet.Reset();
+            });
+        }
     }
 
     void CreateMoveForBot()

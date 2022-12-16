@@ -17,7 +17,24 @@ public class MoveAndBetInfoUI : MonoBehaviour
 
     public void MakeBet(Pot balance, float amount)
     {
-        bet.TakeAmount(balance, amount);
+        //bet.TakeAmount(balance, amount);
     }
 
+    public void Reset()
+    {
+        //bet.SetPotAmount(0);
+        moveInfoPanel.SetActive(false);
+        bet.gameObject.SetActive(false);
+    }
+
+    public void ResetBetInfo()
+    {
+        //bet.SetPotAmount(0);
+        bet.gameObject.SetActive(false);
+    }
+
+    public void ResetMoveInfo()
+    {
+        moveInfoPanel.SetActive(false);
+    }
 }

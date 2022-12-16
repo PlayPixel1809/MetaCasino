@@ -13,7 +13,7 @@ public class PlayerInfoUi : MonoBehaviour
     {
         gameObject.SetActive(true);
         username.text = ph.GetPlayerNickname(player);
-        balance.SetPotAmount((float)ph.GetPlayerData(player, "balance"));
+        //balance.SetPotAmount((float)ph.GetPlayerData(player, "balance"));
     }
 
     

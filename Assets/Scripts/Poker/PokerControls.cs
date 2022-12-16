@@ -10,6 +10,7 @@ public class PokerControls : MonoBehaviour
 
     public Text callBtnTxt;
     public Text raiseBtnTxt;
+    public Text raiseBtnAmountTxt;
     public Button raiseBtn;
     public Button raiseAmountUpBtn;
     public Button raiseAmountDownBtn;
@@ -20,46 +21,67 @@ public class PokerControls : MonoBehaviour
     private float maxRaiseAmount;
     private float minRaiseAmount;
 
+    private float playerbalance; 
+
 
     public void PlayerControlBtn(Transform btn)
     {
         gameObject.SetActive(false);
-        
-        string moveName = string.Empty;
-        float moveAmount = 0;
 
         string btnName = btn.GetChild(1).GetComponent<Text>().text;
-        if (btnName.IndexOf("FOLD")   > -1) { moveName = "FOLD";  }
-        if (btnName.IndexOf("CHECK")  > -1) { moveName = "CHECK"; }
-        if (btnName.IndexOf("CALL")   > -1) { moveName = "CALL";   moveAmount = callAmount;  }
-        if (btnName.IndexOf("BET")    > -1) { moveName = "BET";    moveAmount = raiseAmount; }
-        if (btnName.IndexOf("RAISE")  > -1) { moveName = "RAISE";  moveAmount = raiseAmount; }
-        if (btnName.IndexOf("All IN") > -1) { moveName = "All IN"; moveAmount = raiseAmount; }
-
-
+        string moveName = GetMoveName(btnName);
+        float moveAmount = GetMoveAmount(btnName);
+        
         ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
         data.Add("moveMade", moveName);
         if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
         ServerClientBridge.NotifyServer(data);
     }
 
+    string GetMoveName(string btnName)
+    {
+        if (btnName.IndexOf("ALL IN") > -1) { return "ALL IN"; }
+        if (btnName.IndexOf("FOLD") > -1) { return "FOLD"; }
+        if (btnName.IndexOf("CHECK") > -1) { return "CHECK"; }
+        if (btnName.IndexOf("CALL") > -1) { return "CALL"; }
+        if (btnName.IndexOf("BET") > -1) { return "BET"; }
+        if (btnName.IndexOf("RAISE") > -1) { return "RAISE"; }
+        
+        return string.Empty;
+    }
+
+    float GetMoveAmount(string btnName)
+    {
+        if (btnName.IndexOf("CALL") > -1) { return callAmount; }
+        if (btnName.IndexOf("BET") > -1 || btnName.IndexOf("RAISE") > -1)    { return raiseAmount; }
+        return 0;
+    }
+
+    
+
     public void RaiseAmountUpBtn()
     {
-        string raiseBtnTxt = this.raiseBtnTxt.text.Replace(raiseAmount.ToString(),"");
-        raiseAmount = Mathf.Clamp(raiseAmount + 2000, minRaiseAmount, maxRaiseAmount);
-        this.raiseBtnTxt.text = raiseBtnTxt + raiseAmount.ToString();
+        if (raiseAmount == maxRaiseAmount) { return; }
+        raiseAmount = Mathf.Clamp(raiseAmount * 2, minRaiseAmount, maxRaiseAmount);
+        if (raiseAmount == maxRaiseAmount) { raiseBtnTxt.text += " [ALL IN]"; }
+        raiseBtnAmountTxt.text = raiseAmount.ToString();
     }
 
     public void RaiseAmountDownBtn()
     {
-        string raiseBtnTxt = this.raiseBtnTxt.text.Replace(raiseAmount.ToString(), "");
-        raiseAmount = Mathf.Clamp(raiseAmount - 2000, minRaiseAmount, maxRaiseAmount);
-        this.raiseBtnTxt.text = raiseBtnTxt + raiseAmount.ToString();
+        if (raiseAmount == minRaiseAmount) { return; }
+        raiseBtnTxt.text = raiseBtnTxt.text.Replace(" [ALL IN]","");
+        raiseAmount = Mathf.Clamp(raiseAmount / 2, minRaiseAmount, maxRaiseAmount);
+        raiseBtnAmountTxt.text = raiseAmount.ToString();
     }
 
    
     public void EvaluateCallBtn(float currentBet, float playerBet, float playerBalance)
     {
+        //Debug.Log(currentBet);
+        //Debug.Log(playerBet);
+        //Debug.Log(playerBalance);
+
         if (currentBet == 0 || playerBet == currentBet) 
         {
             callAmount = 0;
@@ -82,7 +104,12 @@ public class PokerControls : MonoBehaviour
     public void EvaluateRaiseBtn(float currentBet, float playerBalance)
     {
         string btntext = "RAISE";
-        if (currentBet == 0) { btntext = "BET"; }
+        raiseAmount = currentBet * 2;
+        if (currentBet == 0) 
+        { 
+            btntext = "BET";
+            raiseAmount = PokerClient.ins.smallBlind * 2;
+        }
         
         if (callBtnTxt.text.IndexOf("ALL IN") > -1)
         {
@@ -93,17 +120,17 @@ public class PokerControls : MonoBehaviour
             return;
         }
 
-        raiseAmount = currentBet * 2;
+        raiseBtnTxt.text = btntext;
+        raiseBtnAmountTxt.text = raiseAmount.ToString();
         if (playerBalance <= raiseAmount)
         {
             raiseAmount = playerBalance;
-            raiseBtnTxt.text = btntext + " [ALL IN]\n" + raiseAmount.ToString();
+            raiseBtnTxt.text += "ALL IN";
             raiseAmountUpBtn.interactable = false;
             raiseAmountDownBtn.interactable = false;
         }
         else
         {
-            raiseBtnTxt.text = btntext + "\n" + raiseAmount.ToString();
             minRaiseAmount = raiseAmount;
             maxRaiseAmount = playerBalance;
         }

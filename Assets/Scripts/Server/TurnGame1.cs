@@ -48,8 +48,8 @@ public class TurnGame1 : MonoBehaviour
 
         NetworkGame.ins.onGameStart += () =>
         {
-            turnEligiblePlayers = new bool[NetworkGame.ins.seats.Length];
-            for (int i = 0; i < NetworkGame.ins.seats.Length; i++) { if (NetworkGame.ins.seats[i] != 0) { turnEligiblePlayers[i] = true; } }
+            turnEligiblePlayers = new bool[NetworkRoom.ins.seats.Length];
+            for (int i = 0; i < NetworkRoom.ins.seats.Length; i++) { if (NetworkRoom.ins.seats[i] != 0) { turnEligiblePlayers[i] = true; } }
             NetworkGame.ins.SyncData("turnEligiblePlayers", turnEligiblePlayers);
 
             dealer = GetNextTurnIndex((int)ph.GetRoomData("dealer"));
@@ -60,7 +60,7 @@ public class TurnGame1 : MonoBehaviour
 
 
 
-        tablePot.SetPotAmount(0);
+        tablePot.Reset();
 
         if (User.localUser != null)
         { ph.SetLocalPlayerData("balance", User.localUser.balance); }

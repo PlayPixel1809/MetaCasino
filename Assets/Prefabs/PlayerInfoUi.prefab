@@ -161,7 +161,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 721213711605091109}
-  - component: {fileID: 721213711605091108}
   - component: {fileID: 1519792550}
   m_Layer: 5
   m_Name: PlayerInfoUi
@@ -196,22 +195,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &721213711605091108
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 721213711605091106}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e51c9756c5d842f45b43247cdd772aa6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  username: {fileID: 721213711795490915}
-  balance: {fileID: 721213712693902163}
-  cardsHolder: {fileID: 7435544941332361316}
-  timer: {fileID: 9155546006594613967}
 --- !u!114 &1519792550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -225,6 +208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchorPoint: {fileID: 0}
+  visibleDistance: 10
 --- !u!1 &721213711795490913
 GameObject:
   m_ObjectHideFlags: 0
@@ -431,7 +415,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b27446d848ba442949db943ad995ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  potAmount: {fileID: 721213712696131422}
+  amountTxt: {fileID: 0}
+  moneyModel: {fileID: 0}
+  depositSound: {fileID: 0}
+  depositors: {fileID: 0}
+  outline: {fileID: 0}
+  seatIndexes: 
 --- !u!1 &721213712696131420
 GameObject:
   m_ObjectHideFlags: 0
@@ -564,6 +553,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardAnimTime: 1
+  revealCard: 0
   cardAnimCurve:
     serializedVersion: 2
     m_Curve:
@@ -589,7 +579,6 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   cardsParent: {fileID: 0}
-  cardsPositions: []
   cards:
   - {fileID: 1276853859149267036}
   - {fileID: 9010736308529586365}

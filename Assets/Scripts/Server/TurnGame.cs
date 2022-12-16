@@ -31,10 +31,10 @@ public class TurnGame : MonoBehaviour
 
         NetworkGame.ins.onGameStart += () =>
         {
-            turnEligiblePlayers = new bool[NetworkGame.ins.seats.Length];
-            for (int i = 0; i < NetworkGame.ins.seats.Length; i++) { if (NetworkGame.ins.seats[i] != 0) { turnEligiblePlayers[i] = true; } }
+            turnEligiblePlayers = new bool[NetworkRoom.ins.seats.Length];
+            for (int i = 0; i < NetworkRoom.ins.seats.Length; i++) { if (NetworkRoom.ins.seats[i] != 0) { turnEligiblePlayers[i] = true; } }
 
-            turnRecievedPlayers = new bool[NetworkGame.ins.seats.Length];
+            turnRecievedPlayers = new bool[NetworkRoom.ins.seats.Length];
             dealer = GetNextTurnIndex(dealer);
 
             NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", turnEligiblePlayers }, { "turnRecievedPlayers", turnRecievedPlayers }, { "dealer", dealer } });
@@ -45,10 +45,18 @@ public class TurnGame : MonoBehaviour
     
     void OnClientMsgRecieved(int sender, ExitGames.Client.Photon.Hashtable hashtable)
     {
-        
+        if (hashtable.ContainsKey("moveMade"))
+        {
+            StopCoroutine(waitForTurnCoroutine);
+        }
 
     }
-    
+
+    public void StartFirstTurn(Action onPlayerDidntRespond)
+    {
+        StartTurn(GetNextTurnIndex(dealer), onPlayerDidntRespond);
+    }
+
 
     public void StartTurn(int turnIndex, Action onPlayerDidntRespond)
     {
@@ -87,7 +95,7 @@ public class TurnGame : MonoBehaviour
         {
             iterations -= 1;
             nextTurnIndex += 1;
-            if (nextTurnIndex == NetworkGame.ins.seats.Length) { nextTurnIndex = 0; }
+            if (nextTurnIndex == NetworkRoom.ins.seats.Length) { nextTurnIndex = 0; }
             if (turnEligiblePlayers[nextTurnIndex]) { return nextTurnIndex; }
         }
         return -1;

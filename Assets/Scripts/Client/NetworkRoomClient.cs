@@ -19,7 +19,10 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     public List<KeyValue> initialProperties;
     public List<string> matchmakingProperties;
     public int maxPlayers = 5;
-    
+
+    public uiLabel lpName;
+    public List<NetworkRoomSeat> seats;
+
 
     public ExitGames.Client.Photon.Hashtable startProperties = new ExitGames.Client.Photon.Hashtable();
 
@@ -38,6 +41,7 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     void Update()
     {
         //Debug.Log(PhotonNetwork.NetworkClientState);
+        //if (Input.GetKey("a")) { AudioSource.PlayClipAtPoint(); }
     }
 
     void Start()
@@ -53,6 +57,23 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
             { User.LoginAndCreateLocalUser(PlayerPrefs.GetString("email"), PlayerPrefs.GetString("password")); }
             else
             { User.LoginAndCreateLocalUser(defaultEmail, defaultPassword); }
+        }
+
+        ServerClientBridge.ins.onServerMsgRecieved += OnMsgRecieved;
+    }
+
+    public void OnMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)
+    {
+        if (hashtable.ContainsKey("seats"))
+        {
+            int[] modifiedSeats = (int[])hashtable["seats"];
+            for (int i = 0; i < seats.Count; i++)
+            {
+                if (modifiedSeats[i] != 0 && seats[i].actorNo == 0) { seats[i].OccupySeat(modifiedSeats[i]); }
+                if (modifiedSeats[i] == 0 && seats[i].actorNo != 0) { seats[i].VaccateSeat(); }
+
+                seats[i].actorNo = modifiedSeats[i];
+            }
         }
     }
 

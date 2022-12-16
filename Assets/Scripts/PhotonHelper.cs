@@ -73,7 +73,7 @@ public static class ph //photon helper
 
     public static void ChangePlayerData(Player player, string key, float amount)
     {
-        float newVal = (float)player.CustomProperties[key] + amount;
+        float newVal = (float)GetPlayerData(player, key) + amount;
         SetPlayerData(player, key, newVal);
     }
 

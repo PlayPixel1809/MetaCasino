@@ -10,15 +10,24 @@ public class CardsHolder : MonoBehaviour
     
     public Transform cardsParent;
 
-    public List<Transform> cardsPositions;
-
+    [Header("Assigned During Game -")]
     public List<Card> cards = new List<Card>();
 
+    
 
     public void RevealCards()
     {
-        gameObject.SetActive(true);
         for (int i = 0; i < cards.Count; i++) { cards[i].RevealCard(); }
+    }
+
+    public void HighlightCards()
+    {
+        for (int i = 0; i < cards.Count; i++) { cards[i].HighlightCard(); }
+    }
+
+    public void RemoveCardsHighlight()
+    {
+        for (int i = 0; i < cards.Count; i++) { cards[i].RemoveHighlight(); }
     }
 
     public void HideCards()
@@ -26,43 +35,75 @@ public class CardsHolder : MonoBehaviour
         for (int i = 0; i < cards.Count; i++) { cards[i].HideCard(); }
     }
 
-    public void CopyCards(CardsHolder copyFrom)
+    public void RemoveCards()
     {
-        for (int i = 0; i < copyFrom.cards.Count; i++)
+        for (int i = 0; i < cardsParent.childCount; i++)
         {
-            cards[i].SetCard(copyFrom.cards[i].cardIndex, copyFrom.cards[i].deck);
-            cards[i].gameObject.SetActive(true);
-            if (revealCard) { cards[i].RevealCard(); }
+            if (cardsParent.GetChild(i).gameObject.activeInHierarchy)
+            {
+                Card activeCard = cardsParent.GetChild(i).GetChild(0).GetComponent<Card>();
+                activeCard.transform.parent.gameObject.SetActive(false);
+                cards.Remove(activeCard);
+            }
         }
     }
 
-    public void AddCard(Card card)
+    public void CopyCards(CardsHolder copyFrom, bool revealCards = false)
     {
-        cards.Add(card);
-        card.transform.parent = cardsParent;
+        for (int i = 0; i < copyFrom.cards.Count; i++)
+        {
+            if (!cardsParent.GetChild(i).gameObject.activeSelf) { AddCard(copyFrom.cards[i].cardIndex, false); }
+        }
+        if (revealCards) { RevealCards(); } else { HideCards(); }
+    }
 
-        Transform target = cardsParent;
-        if (cards.Count <= cardsPositions.Count) { target = cardsPositions[cards.Count - 1]; }
+    public Card AddCard(int cardIndex, bool animate = true)
+    {
+        for (int i = 0; i < cardsParent.childCount; i++)
+        {
+            if (!cardsParent.GetChild(i).gameObject.activeSelf)
+            {
+                Card inActiveCard = cardsParent.GetChild(i).GetChild(0).GetComponent<Card>();
+                inActiveCard.transform.parent.gameObject.SetActive(true);
+                inActiveCard.SetCard(cardIndex, Deck.ins);
+                cards.Add(inActiveCard);
+                if (animate) { StartCoroutine(AnimateCard(inActiveCard.transform)); }
+                return inActiveCard;
+            }
+        }
 
-        StartCoroutine(AnimateCard(card.transform, target));
+        return null;
     }
 
 
-    IEnumerator AnimateCard(Transform card, Transform target)
+    IEnumerator AnimateCard(Transform card)
     {
-        Vector3 fromPos = card.position;
+        card.position = Deck.ins.cardSpawnPoint.position;
+        card.rotation = Deck.ins.cardSpawnPoint.rotation;
+
+        Vector3 fromPos = card.localPosition;
         Quaternion fromRot = card.rotation;
         float val = 0;
         while (val < 1)
         {
             val += Time.deltaTime / cardAnimTime;
 
-            card.position = Vector3.Lerp(fromPos, target.position, cardAnimCurve.Evaluate(val));
-            card.rotation = Quaternion.Lerp(fromRot, target.rotation, cardAnimCurve.Evaluate(val));
+            card.localPosition = Vector3.Lerp(fromPos, Vector3.zero, cardAnimCurve.Evaluate(val));
+            card.rotation = Quaternion.Lerp(fromRot, card.parent.rotation, cardAnimCurve.Evaluate(val));
 
             yield return null;
         }
         if (revealCard) { card.GetComponent<Card>().RevealCard(); }
 
+    }
+
+    public List<int> GetCardsIndexes()
+    {
+        List<int> cardsIndexes = new List<int>();
+        for (int i = 0; i < cards.Count; i++)
+        {
+            cardsIndexes.Add(cards[i].cardIndex);
+        }
+        return cardsIndexes;
     }
 }
