@@ -22,7 +22,7 @@ public class NetworkGameSeat : MonoBehaviour
                 playerBalance = NetworkGameClient.ins.lpBalance;
             }
 
-            playerBalance.AddAmount((float)ph.GetPlayerData(networkRoomSeat.player, "balance"));
+            playerBalance.SetAmount((float)ph.GetPlayerData(networkRoomSeat.player, "balance"));
         };
 
         networkRoomSeat.onSeatVaccated += () =>

@@ -31,7 +31,10 @@ public static class PokerHands
     public static WinInfo GetWinningSeats(List<int> seats)
     {
         List<List<int>> hands = new List<List<int>>();
-        for (int i = 0; i < seats.Count; i++) { hands.Add(CardGame.ins.GetPlayerCards(seats[i])); }
+        for (int i = 0; i < seats.Count; i++) 
+        {
+            if (!CardGame.ins.foldedPlayers[seats[i]]) { hands.Add(CardGame.ins.GetPlayerCards(seats[i])); } 
+        }
 
         WinningHands winningHands = GetWinningHands(hands);
         WinInfo winInfo = new WinInfo();

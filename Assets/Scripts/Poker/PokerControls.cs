@@ -21,8 +21,13 @@ public class PokerControls : MonoBehaviour
     private float maxRaiseAmount;
     private float minRaiseAmount;
 
-    private float playerbalance; 
 
+    public void ActivateControls(float currentBet, float playerBet, float playerBalance)
+    {
+        gameObject.SetActive(true);
+        EvaluateCallBtn(currentBet, playerBet, playerBalance);
+        EvaluateRaiseBtn(currentBet, playerBalance);
+    }
 
     public void PlayerControlBtn(Transform btn)
     {

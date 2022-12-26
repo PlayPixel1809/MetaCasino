@@ -15,44 +15,66 @@ public class PokerClient : MonoBehaviour
     public CardsHolder communityCards3D;
 
 
-    public PotUI mainPot;
-    public PotUI[] sidePots;
+    public Pot mainPot;
+    public Pot[] sidePots;
 
     public GameObject restartBtn;
 
     [HideInInspector] public float smallBlind;
 
-    [HideInInspector]
+    //[HideInInspector]
     public List<PokerSeat> seats;
 
     void Start()
     {
-        for (int i = 0; i < NetworkRoomClient.ins.seats.Count; i++) { seats.Add(NetworkRoomClient.ins.seats[i].GetComponent<PokerSeat>()); }
+        StartCoroutine("AssignSeats");
         ServerClientBridge.ins.onServerMsgRecieved += OnMsgRecieved;
+    }
+
+    IEnumerator AssignSeats()
+    {
+        yield return new WaitForEndOfFrame();
+        seats = new List<PokerSeat>();
+        for (int i = 0; i < NetworkRoomClient.ins.seats.Count; i++) { seats.Add(NetworkRoomClient.ins.seats[i].GetComponent<PokerSeat>()); }
     }
 
     public void OnMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)
     {
+        if (hashtable.ContainsKey("gameStartCounter"))
+        {
+            for (int i = 0; i < seats.Count; i++) { seats[i].roundBet.ResetAmount(); }
+        }
+
         if (hashtable.ContainsKey("smallBlindSeat")) 
         {
             smallBlind = (float)hashtable["smallBlindAmount"];
             TurnGameClient.ins.seats[(int)hashtable["smallBlindSeat"]].MakeMove("S-BLIND", smallBlind);
+            seats[(int)hashtable["smallBlindSeat"]].MakeBet(smallBlind);
         }
 
-        if (hashtable.ContainsKey("bigBlindSeat"))   { TurnGameClient.ins.seats[(int)hashtable["bigBlindSeat"]].MakeMove("B-BLIND", (float)hashtable["bigBlindAmount"]); }
+        if (hashtable.ContainsKey("bigBlindSeat"))   
+        { 
+            TurnGameClient.ins.seats[(int)hashtable["bigBlindSeat"]].MakeMove("B-BLIND", (float)hashtable["bigBlindAmount"]);
+            seats[(int)hashtable["bigBlindSeat"]].MakeBet((float)hashtable["bigBlindAmount"]);
+        }
 
-        if (hashtable.ContainsKey("evaluatePokerControls"))
+        if (hashtable.ContainsKey("getPokerMove"))
         {
-            //Debug.Log("evaluatePokerControls");
-            float balance = (float)ph.GetPlayerData(NetworkRoomClient.ins.seats[TurnGameClient.ins.turn].player, "balance");
-            lpControls.EvaluateCallBtn((float)hashtable["currentBet"], (float)hashtable["playerBet"], balance);
-            lpControls.EvaluateRaiseBtn((float)hashtable["currentBet"], balance);
+            seats[TurnGameClient.ins.turn].GetPokerMove((float)hashtable["currentBet"], (float)hashtable["playerBet"]);
         }
 
-       
+        if (hashtable.ContainsKey("gameStartCounter"))
+        {
+            for (int i = 0; i < seats.Count; i++) { seats[i].roundBet.ResetAmount(); }
+        }
+
+        if (hashtable["moveMade"] != null && (string)hashtable["moveMade"] == "FOLD") { seats[(int)hashtable["moveMadeBy"]].MakePlayerFoldInAllPots(); }
+
+        if (hashtable["moveAmount"] != null) { seats[(int)hashtable["moveMadeBy"]].MakeBet((float)hashtable["moveAmount"]); }
+
         if (hashtable.ContainsKey("endRound"))
         {
-            for (int i = 0; i < NetworkGameClient.ins.seats.Count; i++) { seats[i].DeactivateMoveInfo(); }
+            for (int i = 0; i < seats.Count; i++) { seats[i].DeactivateMoveInfo(); }
         }
 
         if (hashtable.ContainsKey("submitRoundBet"))
@@ -62,7 +84,7 @@ public class PokerClient : MonoBehaviour
 
         if (hashtable.ContainsKey("mainPotAmount"))
         {
-            mainPot.SetPot((float)hashtable["mainPotAmount"], (int[])hashtable["mainPotSeats"]); 
+            mainPot.AddAmount((float)hashtable["mainPotAmount"], (int[])hashtable["mainPotSeats"]); 
         }
 
         if (hashtable.ContainsKey("sidePotAmount"))
@@ -70,7 +92,7 @@ public class PokerClient : MonoBehaviour
             mainPot.gameObject.SetActive(false);
             for (int i = 0; i < sidePots.Length; i++)
             {
-                if (!sidePots[i].gameObject.activeInHierarchy) { sidePots[i].SetPot((float)hashtable["sidePotAmount"], (int[])hashtable["sidePotSeats"]); break; }
+                if (!sidePots[i].gameObject.activeInHierarchy) { sidePots[i].AddAmount((float)hashtable["sidePotAmount"], (int[])hashtable["sidePotSeats"]); break; }
             }
         }
 
@@ -100,7 +122,7 @@ public class PokerClient : MonoBehaviour
 
         if (hashtable.ContainsKey("startShowDown"))
         {
-            PotUI showDownPot = mainPot;
+            Pot showDownPot = mainPot;
             int potIndex = (int)hashtable["potIndex"];
             if (potIndex > -1) { showDownPot = sidePots[potIndex]; }
             int[] winningSeats = (int[])hashtable["winningSeats"];

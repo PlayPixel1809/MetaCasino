@@ -27,15 +27,15 @@ public class NetworkRoomSeat : MonoBehaviour
         this.actorNo = actorNo;
         seatIndex = GetSeatIndex();
         player = ph.GetPlayer(actorNo);
-
         //moveAndBetInfo.Reset();
         if (player.IsLocal)
         {
             name = "LocalPlayer";
             playerName = NetworkRoomClient.ins.lpName;
 
-            Camera.main.transform.position = cameraPos.position;
-            Camera.main.transform.GetChild(0).LookAt(NetworkGameClient.ins.gameCenterPoint);
+            NetworkRoomClient.ins.mainCam.transform.parent = cameraPos;
+            NetworkRoomClient.ins.mainCam.transform.localPosition = Vector3.zero;
+            NetworkRoomClient.ins.mainCam.transform.localEulerAngles = Vector3.zero;
         }
         else
         {

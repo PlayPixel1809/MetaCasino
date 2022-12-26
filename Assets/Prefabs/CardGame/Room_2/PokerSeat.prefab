@@ -350,7 +350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   amountTxt: {fileID: 2479673318814192157}
-  amountGraphic: {fileID: 0}
+  amountGraphic: {fileID: 7731550423155454131}
   depositSound: {fileID: 0}
 --- !u!1 &2479673317936046127
 GameObject:
@@ -1437,7 +1437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a341116dbe301594da7c3f26f20314ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  amountTxt: {fileID: 6950715699507411342}
+  amountTxt: {fileID: 6950715700399576755}
   amountGraphic: {fileID: 0}
   depositSound: {fileID: 0}
 --- !u!1 &6968951889670814387
@@ -1579,6 +1579,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7731550421596076026}
+  - component: {fileID: 4060775887466003631}
   - component: {fileID: 6831478446268133144}
   - component: {fileID: 7731550421596076027}
   - component: {fileID: -2528065449964639043}
@@ -1613,6 +1614,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4060775887466003631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7731550421596076029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9776db444384b4743beca800ada9c0fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerName: {fileID: 9164586874649270590}
+  character: {fileID: 8471280356393664130}
+  cameraPos: {fileID: 7731550422253010143}
+  actorNo: 0
+  seatIndex: 0
 --- !u!114 &6831478446268133144
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1625,13 +1643,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b5685664760bc4e898efcf257e7d68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerName: {fileID: 9164586874649270590}
   playerBalance: {fileID: 194918263827907394}
-  character: {fileID: 8471280356393664130}
-  cameraPos: {fileID: 7731550422253010143}
-  chips: {fileID: 7731550423155454131}
-  actorNo: 0
-  seatIndex: 0
+  networkRoomSeat: {fileID: 0}
 --- !u!114 &7731550421596076027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1644,10 +1657,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1052d28e0b8dd3641a2dced27e077237, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkGameSeat: {fileID: 6831478446268133144}
   moveMade: {fileID: 2614620995662757716}
   timer: {fileID: 1547175051780545314}
   timer3D: {fileID: 7731550423193999082}
+  networkRoomSeat: {fileID: 0}
+  networkGameSeat: {fileID: 6831478446268133144}
 --- !u!114 &-2528065449964639043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1660,11 +1674,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6eb647f55a922e94db4949c6c79b7808, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkGameSeat: {fileID: 6831478446268133144}
-  turnGameSeat: {fileID: 7731550421596076027}
   cards: {fileID: 2798469217108589221}
   cards3D: {fileID: 5850676779019112923}
   cardsIndexes: []
+  networkRoomSeat: {fileID: 0}
+  networkGameSeat: {fileID: 6831478446268133144}
+  turnGameSeat: {fileID: 7731550421596076027}
 --- !u!114 &4327420843366553448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1677,10 +1692,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1db0b0e269f91bd4f9d27e5cf18f5783, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  roundBet: {fileID: 5583716123239879429}
+  networkRoomSeat: {fileID: 0}
   networkGameSeat: {fileID: 6831478446268133144}
   turnGameSeat: {fileID: 7731550421596076027}
   cardGameSeat: {fileID: -2528065449964639043}
-  roundBet: {fileID: 5583716123239879429}
 --- !u!1 &7731550421813216361
 GameObject:
   m_ObjectHideFlags: 0

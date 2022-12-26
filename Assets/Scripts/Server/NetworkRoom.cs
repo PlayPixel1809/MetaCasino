@@ -18,18 +18,19 @@ public class NetworkRoom : MonoBehaviourPunCallbacks
     [Header("Assigned During Game -")]
     public int[] seats; // Sent To Clients
 
-    public Action onGameStart;
     public Action onRoomCreated;
-
-    public Action<Player> onPlayerEnteredRoom;
-    public Action<Player> onPlayerLeftRoom;
 
     public Action<int> onSeatAssigned;
     public Action<int> onSeatVaccated;
 
+    void Start()
+    {
+        seats = new int[NetworkRoomClient.ins.seats.Count];
+    }
+
     public override void OnCreatedRoom()
     {
-        onPlayerEnteredRoom?.Invoke(PhotonNetwork.LocalPlayer);
+        OnPlayerEnteredRoom(PhotonNetwork.LocalPlayer);
         onRoomCreated?.Invoke();
     }
 

@@ -473,7 +473,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1150087281185732011}
-  - component: {fileID: 1251215030566559689}
+  - component: {fileID: 8028533492951582236}
   m_Layer: 5
   m_Name: MinPot
   m_TagString: Untagged
@@ -505,7 +505,7 @@ RectTransform:
   m_AnchoredPosition: {x: -1827, y: -35.399994}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1251215030566559689
+--- !u!114 &8028533492951582236
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -514,11 +514,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1150087281185732010}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bcc317562edec146a244294ddc1d62c, type: 3}
+  m_Script: {fileID: 11500000, guid: 71b27446d848ba442949db943ad995ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  potAmount: {fileID: 1150087281447068123}
-  contributors: {fileID: 1150087280469202772}
+  amountTxt: {fileID: 1150087281447068123}
+  amountGraphic: {fileID: 0}
+  depositSound: {fileID: 0}
+  depositors: {fileID: 1150087280469202772}
   outline: {fileID: 7138420501881949890}
   seatIndexes: 
 --- !u!1 &1150087281211341306

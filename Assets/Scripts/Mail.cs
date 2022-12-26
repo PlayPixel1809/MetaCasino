@@ -8,7 +8,7 @@ public class Mail : MonoBehaviour
     public static int portNumber = 587;
     public static bool enableSSL = true;
     public static string emailFromAddress = "admin@playpixelinteractive.com"; //Sender Email Address  
-    public static string password = "admiN@1234"; //Sender Password  
+    public static string password = "admiN@12345"; //Sender Password  
     
     public static void SendEmail(string to, string subject, string body)
     {

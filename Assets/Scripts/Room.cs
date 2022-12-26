@@ -129,7 +129,7 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         startProperties.Add("data", string.Empty);
         roomOptions.CustomRoomPropertiesForLobby = matchmakingProperties.ToArray();
         roomOptions.CustomRoomProperties = startProperties;
-        if (maxPlayers > 0) { roomOptions.MaxPlayers = Convert.ToByte(maxPlayers); }
+        if (maxPlayers > 0) { roomOptions.MaxPlayers = Convert.ToByte(1); }
         roomOptions.EmptyRoomTtl = 3000;
         roomOptions.PlayerTtl = 3000;
 

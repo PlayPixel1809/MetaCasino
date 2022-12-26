@@ -31,6 +31,7 @@ public class TurnGameSeat : MonoBehaviour
             if (networkRoomSeat.player.IsLocal)
             {
                 timer = TurnGameClient.ins.lpTimer;
+                NetworkRoomClient.ins.mainCam.LookAt(TurnGameClient.ins.camLookAtPoint);
             }
         };
 
@@ -38,9 +39,16 @@ public class TurnGameSeat : MonoBehaviour
     
     public void StartTurn()
     {
-        NetworkGameClient.ins.lpControls.SetActive(true);
+        if (networkRoomSeat.player.IsLocal) { NetworkGameClient.ins.lpControls.SetActive(true); }
         timer.StartTimer(TurnGameClient.ins.turnTime, null);
         timer3D.StartTimer(TurnGameClient.ins.turnTime, null);
+    }
+
+    public void StopTurn()
+    {
+        NetworkGameClient.ins.lpControls.SetActive(false);
+        timer.gameObject.SetActive(false);
+        timer3D.gameObject.SetActive(false);
     }
 
     public void MakeMove(string moveName, float amount = 0)

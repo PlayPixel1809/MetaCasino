@@ -5,44 +5,18 @@ using UnityEngine.UI;
 
 public class Pot : MonoBehaviour
 {
-    [SerializeField] private Text amountTxt;
+    public Text amountTxt;
     public GameObject amountGraphic;
+    [HideInInspector]
+    public Transform depositors;
+
+
     [SerializeField] private AudioClip depositSound;
-
-    [SerializeField] private Transform depositors;
     [SerializeField] private GameObject outline;
-
 
     [HideInInspector]
     public int[] seatIndexes;
 
-
-    /*public void DepositMoney(Pot takeFrom, float amount)
-    {
-        gameObject.SetActive(true);
-        takeFrom.SubtractAmount(amount);
-        AddAmount(amount);
-    }
-
-
-
-    public void TakeAmount(Pot takeFrom, float amount)
-    {
-        gameObject.SetActive(true);
-        takeFrom.SubtractAmount(amount);
-        AddAmount(amount);
-    }
-
-    public float GetPotAmount()
-    {
-        return float.Parse(potAmount.text);
-    }
-
-    public void SetPotAmount(float amount)
-    {
-        gameObject.SetActive(true);
-        potAmount.text = amount.ToString();
-    }*/
 
     public void AddAmount(float amount, int[] seatIndexes)
     {
@@ -61,6 +35,8 @@ public class Pot : MonoBehaviour
 
             depositors.GetChild(i).GetComponent<Text>().text = ph.GetPlayerNickname(NetworkRoomClient.ins.seats[seatIndexes[i]].player);
         }
+
+        if (amountGraphic != null && GetPotAmount() > 0) { amountGraphic.gameObject.SetActive(true); }
     }
 
     public void SubtractAmount(float amount)
@@ -68,7 +44,7 @@ public class Pot : MonoBehaviour
         float finalAmount = GetPotAmount() - amount;
         if (finalAmount < 0) { finalAmount = 0; }
         amountTxt.text = finalAmount.ToString();
-
+        if (amountGraphic != null && GetPotAmount() <= 0) { amountGraphic.gameObject.SetActive(false); }
     }
 
     public float GetPotAmount()
@@ -80,5 +56,16 @@ public class Pot : MonoBehaviour
     {
         amountTxt.text = "0";
         gameObject.SetActive(false);
+        if (amountGraphic != null) { amountGraphic.gameObject.SetActive(false); }
+    }
+
+    public void Highlight()
+    {
+        outline.SetActive(true);
+    }
+
+    public void RemoveHighlight()
+    {
+        outline.SetActive(false);
     }
 }

@@ -16,7 +16,7 @@ public class PokerWinManager : MonoBehaviour
 
     [Header("Assigned During Game -")]
     public List<CardGameSeat> showDownSeats;
-    private PotUI activePot;
+    private Pot activePot;
 
     [System.Serializable]
     public class WinType
@@ -44,7 +44,7 @@ public class PokerWinManager : MonoBehaviour
             SetWinningPlayerAndWinType(ph.GetPlayerNickname(winningSeat.networkRoomSeat.player), "Foldout");
             ph.ChangePlayerData(winningSeat.networkRoomSeat.player, "balance", PokerClient.ins.mainPot.GetPotAmount());
             winningSeat.networkGameSeat.playerBalance.AddAmount(PokerClient.ins.mainPot.GetPotAmount());
-            PokerClient.ins.mainPot.potAmount.text = "";
+            PokerClient.ins.mainPot.amountTxt.text = "";
 
             yield return new WaitForSeconds(2);
 
@@ -70,9 +70,9 @@ public class PokerWinManager : MonoBehaviour
         CardGameClient.ins.lpCards.RemoveCards();
 
         showDownSeats = new List<CardGameSeat>();
-        for (int i = 0; i < NetworkGameClient.ins.seats.Count; i++)
+        for (int i = 0; i < CardGameClient.ins.seats.Count; i++)
         {
-            if (CardGameClient.ins.seats[i].cards3D.cards.Count > 0)
+            if (CardGameClient.ins.seats[i].cards3D.cards.Count > 0 && TurnGameClient.ins.seats[i].moveMade.GetLabel().ToLower() != "fold")
             {
                 PokerClient.ins.seats[i].roundBet.Reset();
                 TurnGameClient.ins.seats[i].ResetMoveMade();
@@ -84,12 +84,12 @@ public class PokerWinManager : MonoBehaviour
         }
     }
 
-    public void StartShowDown(PotUI pot, int[] winningSeats, string winType, int[] winningCards)
+    public void StartShowDown(Pot pot, int[] winningSeats, string winType, int[] winningCards)
     {
         StartCoroutine(StartShowDownCoroutine(pot, winningSeats, winType, winningCards));
     }
 
-    IEnumerator StartShowDownCoroutine(PotUI pot, int[] winningSeats, string winType, int[] winningCards)
+    IEnumerator StartShowDownCoroutine(Pot pot, int[] winningSeats, string winType, int[] winningCards)
     {
         winInfoPanel.SetActive(false);
         if (activePot != null)

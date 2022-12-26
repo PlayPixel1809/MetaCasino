@@ -13,20 +13,41 @@ public class Pocket : MonoBehaviour
 
     void Start()
     {
-        amountGraphicLocalPos = amountGraphic.transform.localPosition;
+        if (amountGraphic != null) { amountGraphicLocalPos = amountGraphic.transform.localPosition; }
     }
+
+    public void ResetAmount()
+    {
+        amountTxt.text = "0";
+        gameObject.SetActive(false);
+    }
+
 
     public void Reset()
     {
         amountTxt.text = "0";
-        amountGraphic.transform.localPosition = amountGraphicLocalPos;
         gameObject.SetActive(false);
+
+        if (amountGraphic != null) 
+        { 
+            amountGraphic.gameObject.SetActive(false);
+            amountGraphic.transform.localPosition = amountGraphicLocalPos;
+        }
+    }
+
+    public void SetAmount(float amount)
+    {
+        gameObject.SetActive(true);
+        amountTxt.text = amount.ToString();
+        if (amountGraphic != null && GetAmount() > 0) { amountGraphic.gameObject.SetActive(true); }
     }
 
     public void AddAmount(float amount)
     {
+        gameObject.SetActive(true);
         float finalAmount = GetAmount() + amount;
         amountTxt.text = finalAmount.ToString();
+        if (amountGraphic != null && GetAmount() > 0) { amountGraphic.gameObject.SetActive(true); }
     }
 
     public void SubtractAmount(float amount)
@@ -34,7 +55,7 @@ public class Pocket : MonoBehaviour
         float finalAmount = GetAmount() - amount;
         if (finalAmount < 0) { finalAmount = 0; }
         amountTxt.text = finalAmount.ToString();
-
+        if (amountGraphic != null && GetAmount() <= 0) { amountGraphic.gameObject.SetActive(false); }
     }
 
     public float GetAmount()

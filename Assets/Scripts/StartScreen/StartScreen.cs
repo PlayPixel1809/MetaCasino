@@ -17,7 +17,6 @@ public class StartScreen : MonoBehaviour
     void Start()
     {
         if (User.localUser != null) { DestroyImmediate(User.localUser.gameObject); }
-        
     }
 
 

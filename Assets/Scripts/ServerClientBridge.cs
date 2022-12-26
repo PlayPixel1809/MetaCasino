@@ -14,8 +14,6 @@ public class ServerClientBridge : MonoBehaviourPunCallbacks, IOnEventCallback
     public Action<ExitGames.Client.Photon.Hashtable> onServerMsgRecieved;
     public Action<int, ExitGames.Client.Photon.Hashtable> onClientMsgRecieved;
 
-    
-
     public void OnEvent(EventData photonEvent)
     {
         if (photonEvent.Code == 0)
@@ -36,7 +34,7 @@ public class ServerClientBridge : MonoBehaviourPunCallbacks, IOnEventCallback
 
     public static void NotifyClients(ExitGames.Client.Photon.Hashtable data)
     {
-        PhotonNetwork.RaiseEvent(0, data, new Photon.Realtime.RaiseEventOptions() { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+        PhotonNetwork.RaiseEvent(0, data, new RaiseEventOptions() { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
     }
 
     public static void NotifyClient(int actorNo, string key, object val)
@@ -46,7 +44,7 @@ public class ServerClientBridge : MonoBehaviourPunCallbacks, IOnEventCallback
 
     public static void NotifyClient(int actorNo, ExitGames.Client.Photon.Hashtable data)
     {
-        PhotonNetwork.RaiseEvent(0, data, new Photon.Realtime.RaiseEventOptions() { Receivers = ReceiverGroup.All, TargetActors = new int[1] { actorNo } }, SendOptions.SendReliable);
+        PhotonNetwork.RaiseEvent(0, data, new RaiseEventOptions() { Receivers = ReceiverGroup.All, TargetActors = new int[1] { actorNo } }, SendOptions.SendReliable);
     }
 
 
@@ -57,6 +55,6 @@ public class ServerClientBridge : MonoBehaviourPunCallbacks, IOnEventCallback
 
     public static void NotifyServer(ExitGames.Client.Photon.Hashtable data)
     {
-        PhotonNetwork.RaiseEvent(1, data, new Photon.Realtime.RaiseEventOptions() { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+        PhotonNetwork.RaiseEvent(1, data, new RaiseEventOptions() { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
     }
 }

@@ -17,10 +17,15 @@ public class CardGameClient : MonoBehaviour
 
     void Start()
     {
-        for (int i = 0; i < NetworkGameClient.ins.seats.Count; i++) { seats.Add(NetworkGameClient.ins.seats[i].GetComponent<CardGameSeat>()); }
-
-
+        StartCoroutine("AssignSeats");
         ServerClientBridge.ins.onServerMsgRecieved += OnMsgRecieved;
+    }
+
+    IEnumerator AssignSeats()
+    {
+        yield return new WaitForEndOfFrame();
+        seats = new List<CardGameSeat>();
+        for (int i = 0; i < NetworkRoomClient.ins.seats.Count; i++) { seats.Add(NetworkRoomClient.ins.seats[i].GetComponent<CardGameSeat>()); }
     }
 
     public void OnMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)

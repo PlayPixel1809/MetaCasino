@@ -20,6 +20,8 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     public List<string> matchmakingProperties;
     public int maxPlayers = 5;
 
+    public Transform mainCam;
+
     public uiLabel lpName;
     public List<NetworkRoomSeat> seats;
 
@@ -232,5 +234,8 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
         { return startProperties; }
     }
 
-    
+    public static void CloseRoom()
+    {
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+    }
 }

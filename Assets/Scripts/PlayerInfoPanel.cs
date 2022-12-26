@@ -27,7 +27,7 @@ public class PlayerInfoPanel : MonoBehaviour
 
     public void SetInfo()
     {
-        playerBalance.text = User.localUser.balance.ToString("N0", CultureInfo.InvariantCulture);
+        playerBalance.text = User.localUser.balance.ToString();
         playerName.text = User.localUser.username.ToUpper(); 
     }
 }

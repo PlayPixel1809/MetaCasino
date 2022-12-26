@@ -20,12 +20,9 @@ public class NetworkGame : MonoBehaviour
     public int gameStartCounter; // Sent To Clients
     public float[] playersBets;
 
-    private NetworkRoomSeat networkRoomSeat;
 
     void Start()
     {
-        networkRoomSeat = GetComponent<NetworkRoomSeat>();
-
         NetworkRoom.ins.onSeatAssigned += OnSeatAssigned;
         NetworkRoom.ins.onSeatVaccated += OnSeatVaccated;
 
@@ -60,6 +57,7 @@ public class NetworkGame : MonoBehaviour
             yield return new WaitForSeconds(1);
         }
 
+        gamePlayingSeats = new bool[NetworkRoom.ins.seats.Length];
         for (int i = 0; i < NetworkRoom.ins.seats.Length; i++)
         {
             if (NetworkRoom.ins.seats[i] != 0) { gamePlayingSeats[i] = true; }

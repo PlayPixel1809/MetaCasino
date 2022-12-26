@@ -48,7 +48,7 @@ public class Poker : MonoBehaviour
         TurnGame.ins.onTurn += (s) => 
         {
             //Debug.Log(playersBetsForRound[s]);
-            ServerClientBridge.NotifyClient(1, new ExitGames.Client.Photon.Hashtable() { { "evaluatePokerControls", 1 }, { "currentBet", GetHighestBet() }, { "playerBet", playersBetsForRound[s] } });
+            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "getPokerMove", 1 }, { "currentBet", GetHighestBet() }, { "playerBet", playersBetsForRound[s] } });
         };
     }
 
@@ -268,7 +268,8 @@ public class Poker : MonoBehaviour
 
         for (int i = 0; i < CardGame.ins.playersCards.Length; i++)
         {
-            if (CardGame.ins.playersCards[i] != "Null"){ CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(communityCards, CardGame.ins.GetPlayerCards(i)); }
+            if (CardGame.ins.playersCards[i] != "Null" && !CardGame.ins.foldedPlayers[i])
+            { CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(communityCards, CardGame.ins.GetPlayerCards(i)); }
         }
         NetworkGame.ins.SyncData("playersCards", CardGame.ins.playersCards);
 
