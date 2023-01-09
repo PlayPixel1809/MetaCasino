@@ -139,4 +139,9 @@ public class PokerClient : MonoBehaviour
     {
         NetworkRoomClient.ins.LeaveGameRoom(() => { UnityEngine.SceneManagement.SceneManager.LoadScene("PokerRoom_2"); });
     }
+
+    public void QuitBtn()
+    {
+        NetworkRoomClient.ins.LeaveGameRoom(() => { UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby"); });
+    }
 }

@@ -51,7 +51,7 @@ public class NetworkGameClient : MonoBehaviour
             if (count == 0) 
             { 
                 gameStartCounter.gameObject.SetActive(false);
-                NetworkRoomClient.CloseRoom();
+                //NetworkRoomClient.CloseRoom();
             }
         }
     }

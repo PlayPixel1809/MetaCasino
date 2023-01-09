@@ -123,7 +123,7 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         Debug.Log("CreatingRoom");
         NoticeUtils.ins.ShowLoadingAlert("CREATING ROOM, PLEASE WAIT ");
 
-        RoomOptions roomOptions = new RoomOptions() { MaxPlayers = 2 };
+        RoomOptions roomOptions = new RoomOptions();
 
         startProperties.Add("status",string.Empty);
         startProperties.Add("data", string.Empty);

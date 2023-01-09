@@ -109,7 +109,7 @@ public class BotManager : MonoBehaviourPunCallbacks
             float moveAmount = 0;
 
             if (rand < 2) { moveName = "FOLD"; }
-            if (rand > 0 && rand < 7)
+            if (rand > 1 && rand < 7)
             {
                 if (playerBet == currentBet) { moveName = "CHECK"; }
                 if (playerBet < currentBet) { moveName = "CALL"; moveAmount = currentBet - playerBet; }
