@@ -11,9 +11,6 @@ public class CardGame : MonoBehaviour
     public static CardGame ins;
     void Awake() { ins = this; }
 
-    public List<CardGameSeat> cardGameSeats;
-
-
     public int cardsPerPlayer = 2;
     //public Deck deck;
 
@@ -23,20 +20,36 @@ public class CardGame : MonoBehaviour
     [Header("Assigned During Game -")]
     public bool[] foldedPlayers;
     public List<int> deck;
-
-    [Header("Sent to clients -")]
     public string[] playersCards;
 
     
 
     void Start()
     {
+        NetworkRoom.ins.onSeatAssigned += (seatIndex, actorNo) =>
+        {
+            if (actorNo > 0) { ServerClientBridge.ins.NotifyClient(actorNo, "SetCardGameData", new ExitGames.Client.Photon.Hashtable() { { "cardsPerPlayer", cardsPerPlayer } }); }
+        };
+
         ServerClientBridge.ins.onClientMsgRecieved += OnClientMsgRecieved;
+
+        ServerClientBridge.ins.onMadeMasterClient += () =>
+        {
+            if (ph.GetRoomData("foldedPlayers") != null) { foldedPlayers = (bool[])ph.GetRoomData("foldedPlayers"); }
+            if (ph.GetRoomData("deck") != null)
+            {
+                int[] deckArray = (int[])ph.GetRoomData("deck");
+                deck = new List<int>();
+                for (int i = 0; i < deckArray.Length; i++) { deck.Add(deckArray[i]); }
+            }
+            if (ph.GetRoomData("playersCards") != null) { playersCards = (string[])ph.GetRoomData("playersCards"); }
+
+        };
 
         NetworkGame.ins.onGameStart += () =>
         {
             foldedPlayers = new bool[NetworkRoom.ins.seats.Length];
-            NetworkGame.ins.SyncData("foldedPlayers", foldedPlayers);
+            NetworkRoom.ins.SyncData("foldedPlayers", foldedPlayers);
         };
 
         TurnGame.ins.onDealerSet += (d) =>
@@ -44,22 +57,41 @@ public class CardGame : MonoBehaviour
             ShuffleDeck();
             DistributeCards();
         };
+
+        TurnGame.ins.onTurnCompleted += TurnCompleted;
+
+        NetworkGame.ins.onGameComplete += () =>
+        {
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable()
+            {
+                { "playersCards", null } 
+            });
+        };
+
+        NetworkGame.ins.onSeatVaccated += (seatIndex, actorNo) =>
+        {
+            foldedPlayers[seatIndex] = true;
+            NetworkRoom.ins.SyncData("foldedPlayers", foldedPlayers);
+        };
     }
 
 
 
-    void OnClientMsgRecieved(int senderActorNo, ExitGames.Client.Photon.Hashtable hashtable)
+    void OnClientMsgRecieved(string completedEvId, ExitGames.Client.Photon.Hashtable data)
     {
-        if (hashtable.ContainsKey("moveMade") && (string)hashtable["moveMade"] == "FOLD")
+        if (completedEvId == "DistributeCards") { onCardsDistributed?.Invoke(); }
+    }
+
+    void TurnCompleted(ExitGames.Client.Photon.Hashtable data)
+    {
+        if (((string)data["moveMade"]).ToLower() == "fold")
         {
             TurnGame.ins.turnEligiblePlayers[TurnGame.ins.turn] = false;
             foldedPlayers[TurnGame.ins.turn] = true;
 
-            NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", TurnGame.ins.turnEligiblePlayers }, { "foldedPlayers", foldedPlayers } });
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", TurnGame.ins.turnEligiblePlayers }, { "foldedPlayers", foldedPlayers } });
         }
-
     }
-    
 
     void ShuffleDeck()
     {
@@ -88,18 +120,16 @@ public class CardGame : MonoBehaviour
             }
         }
 
-        foldedPlayers = new bool[cardGameSeats.Count];
+        foldedPlayers = new bool[NetworkRoom.ins.seats.Length];
 
-        NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() 
+        NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable() 
         {
             { "playersCards", playersCards } ,
             { "foldedPlayers", foldedPlayers } ,
             { "deck", deck.ToArray() } ,
         });
 
-        ServerClientBridge.NotifyClients("playersCards", playersCards);
-
-        Utils.InvokeDelayedAction(cardsPerPlayer, () => { onCardsDistributed?.Invoke(); });
+        ServerClientBridge.ins.HireClients("DistributeCards", "playersCards", playersCards);
     }
 
     public int GetNonFoldedPlayersCount()
@@ -119,7 +149,7 @@ public class CardGame : MonoBehaviour
             cards.Add(card);
         }
 
-        if (syncDeckData) { NetworkGame.ins.SyncData("deck", deck.ToArray()); }
+        if (syncDeckData) { NetworkRoom.ins.SyncData("deck", deck.ToArray()); }
         return cards;
     }
 

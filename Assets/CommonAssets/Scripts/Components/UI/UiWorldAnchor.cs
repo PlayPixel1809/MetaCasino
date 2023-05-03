@@ -8,9 +8,13 @@ public class UiWorldAnchor : MonoBehaviour
 
     public float visibleDistance = 10;
 
+    private Vector3 recScale;
+
+
     void Start()
     {
-         GameUtils.ins.StartCoroutine(InfrontOfCameraCheck()); 
+        recScale = transform.localScale;
+        GameUtils.ins.StartCoroutine(InfrontOfCameraCheck()); 
     }
 
     void Update()
@@ -29,7 +33,7 @@ public class UiWorldAnchor : MonoBehaviour
 
             if (Vector3.Distance(anchorPoint.position, Camera.main.transform.position) > visibleDistance)
             {
-                gameObject.SetActive(false);
+                transform.localScale = Vector3.zero; // scale has been zeroed to just have an deactivate effect, gameObject.SetActive(false) stops all the coroutines running on any of the childrens
                 continue;
             }
 
@@ -45,9 +49,9 @@ public class UiWorldAnchor : MonoBehaviour
             helper.LookAt(anchorPoint);
 
             if ((helper.localEulerAngles.y > 0 && helper.localEulerAngles.y < 60) || (helper.localEulerAngles.y > 300 && helper.localEulerAngles.y < 360))
-            { gameObject.SetActive(true); } 
+            { transform.localScale = recScale; } 
             else 
-            { gameObject.SetActive(false); }
+            { transform.localScale = Vector3.zero; }
         }
     }
 }

@@ -25,12 +25,12 @@ public class PokerWinManager : MonoBehaviour
         public Sprite sprite;
     }
 
-    public void TakeMainPotAmount(bool foldout)
+    public void WinMainPotWithoutShowdown(bool foldout)
     {
-        StartCoroutine("TakeMainPotAmountCoroutine", foldout);
+        StartCoroutine("WinMainPotWithoutShowdownCoroutine", foldout);
     }
 
-    IEnumerator TakeMainPotAmountCoroutine(bool foldout)
+    IEnumerator WinMainPotWithoutShowdownCoroutine(bool foldout)
     {
         PokerSeat winningSeat = PokerClient.ins.seats[PokerClient.ins.mainPot.seatIndexes[0]];
         CardGameClient.ins.lpCards.RemoveCards();
@@ -42,8 +42,7 @@ public class PokerWinManager : MonoBehaviour
             yield return new WaitForSeconds(2);
 
             SetWinningPlayerAndWinType(ph.GetPlayerNickname(winningSeat.networkRoomSeat.player), "Foldout");
-            ph.ChangePlayerData(winningSeat.networkRoomSeat.player, "balance", PokerClient.ins.mainPot.GetPotAmount());
-            winningSeat.networkGameSeat.playerBalance.AddAmount(PokerClient.ins.mainPot.GetPotAmount());
+            winningSeat.networkGameSeat.AddBalance(PokerClient.ins.mainPot.GetPotAmount());
             PokerClient.ins.mainPot.amountTxt.text = "";
 
             yield return new WaitForSeconds(2);
@@ -53,44 +52,50 @@ public class PokerWinManager : MonoBehaviour
         else 
         {
             yield return new WaitForSeconds(1);
-
-            ph.ChangePlayerData(winningSeat.networkRoomSeat.player, "balance", PokerClient.ins.mainPot.GetPotAmount());
-            winningSeat.networkGameSeat.playerBalance.AddAmount(PokerClient.ins.mainPot.GetPotAmount());
+            winningSeat.networkGameSeat.AddBalance(PokerClient.ins.mainPot.GetPotAmount());
         }
         
         PokerClient.ins.mainPot.gameObject.SetActive(false);
+        ServerClientBridge.ins.NotifyServerIfMasterClient("WinMainPotWithoutShowdown");
     }
 
-    public void StartShowDowns()
+    public void PrepareForShowDowns()
     {
         winInfoPanel.SetActive(false);
         PokerClient.ins.tableCommunityCards.CopyCards(PokerClient.ins.communityCards3D, true);
-        PokerClient.ins.communityCards.RemoveCards();
+        //PokerClient.ins.communityCards.RemoveCards();
         PokerClient.ins.communityCards3D.RemoveCards();
-        CardGameClient.ins.lpCards.RemoveCards();
+        //CardGameClient.ins.lpCards.RemoveCards();
 
         showDownSeats = new List<CardGameSeat>();
         for (int i = 0; i < CardGameClient.ins.seats.Count; i++)
         {
             if (CardGameClient.ins.seats[i].cards3D.cards.Count > 0 && TurnGameClient.ins.seats[i].moveMade.GetLabel().ToLower() != "fold")
             {
-                PokerClient.ins.seats[i].roundBet.Reset();
                 TurnGameClient.ins.seats[i].ResetMoveMade();
 
                 CardGameClient.ins.seats[i].cards.CopyCards(CardGameClient.ins.seats[i].cards3D);
                 CardGameClient.ins.seats[i].cards3D.RemoveCards();
+                PokerClient.ins.seats[i].roundBet.Reset();
+
                 showDownSeats.Add(CardGameClient.ins.seats[i]);
             }
         }
+
+        Utils.InvokeDelayedAction(2, () => { ServerClientBridge.ins.NotifyServerIfMasterClient("PrepareForShowDowns"); });
     }
 
-    public void StartShowDown(Pot pot, int[] winningSeats, string winType, int[] winningCards)
+
+    public void HighlightShowdownPot(int potIndex)
     {
-        StartCoroutine(StartShowDownCoroutine(pot, winningSeats, winType, winningCards));
+        StartCoroutine(HighlightShowdownPotCoroutine(potIndex));
     }
 
-    IEnumerator StartShowDownCoroutine(Pot pot, int[] winningSeats, string winType, int[] winningCards)
+    IEnumerator HighlightShowdownPotCoroutine(int potIndex)
     {
+        Pot pot = PokerClient.ins.mainPot;
+        if (potIndex > -1) { pot = PokerClient.ins.sidePots[potIndex]; }
+
         winInfoPanel.SetActive(false);
         if (activePot != null)
         {
@@ -100,16 +105,24 @@ public class PokerWinManager : MonoBehaviour
         activePot = pot;
         activePot.Highlight();
 
-        for (int i = 0; i < showDownSeats.Count; i++)  { showDownSeats[i].cards.HideCards(); }
-        PokerClient.ins.tableCommunityCards.RemoveCardsHighlight(); 
-
-        for (int i = 0; i < pot.seatIndexes.Length; i++)
-        {
-            NetworkGameSeat showDownSeat = NetworkGameClient.ins.seats[pot.seatIndexes[i]];
-            showDownSeat.GetComponent<CardGameSeat>().cards.RevealCards();
-        }
+        PokerClient.ins.tableCommunityCards.RemoveCardsHighlight();
+        for (int i = 0; i < showDownSeats.Count; i++) { showDownSeats[i].cards.HideCards(); }
+        for (int i = 0; i < pot.seatIndexes.Length; i++) { CardGameClient.ins.seats[pot.seatIndexes[i]].cards.RevealCards(); }
 
         yield return new WaitForSeconds(2);
+        
+        ServerClientBridge.ins.NotifyServerIfMasterClient("HighlightShowdownPot", "potIndex", potIndex);
+    }
+
+    public void DeclarePotWinners(int potIndex, int[] winningSeats, string winType, int[] winningCards)
+    {
+        StartCoroutine(DeclarePotWinnersCoroutine(potIndex,winningSeats, winType, winningCards));
+    }
+
+    IEnumerator DeclarePotWinnersCoroutine(int potIndex, int[] winningSeats, string winType, int[] winningCards)
+    {
+        Pot pot = PokerClient.ins.mainPot;
+        if (potIndex > -1) { pot = PokerClient.ins.sidePots[potIndex]; }
 
         List<int> winningCardsList = new List<int>();
         for (int i = 0; i < winningCards.Length; i++) { winningCardsList.Add(winningCards[i]); }
@@ -129,8 +142,7 @@ public class PokerWinManager : MonoBehaviour
             if (!string.IsNullOrEmpty(winningPlayers)) { winningPlayers += " , "; }
             winningPlayers += ph.GetPlayerNickname(winningSeat.networkRoomSeat.player);
 
-            ph.ChangePlayerData(winningSeat.networkRoomSeat.player, "balance", pot.GetPotAmount()/ winningSeats.Length);
-            winningSeat.networkGameSeat.playerBalance.AddAmount(pot.GetPotAmount() / winningSeats.Length);
+            winningSeat.networkGameSeat.AddBalance(pot.GetPotAmount() / winningSeats.Length);
         }
         SetWinningPlayerAndWinType(winningPlayers, winType);
 
@@ -139,21 +151,24 @@ public class PokerWinManager : MonoBehaviour
         {
             if (winningCardsList.Contains(communityCards[i])) { PokerClient.ins.tableCommunityCards.cards[i].HighlightCard(); }
         }
-        
+        yield return new WaitForSeconds(4);
+        ServerClientBridge.ins.NotifyServerIfMasterClient("DeclarePotWinners", "potIndex", potIndex);
     }
 
     void SetWinningPlayerAndWinType(string winningPlayer, string winType)
     {
         winInfoPanel.SetActive(true);
+        winTypeImage.sprite = GetWinTypeSprite(winType);
+        winTypeImage.SetNativeSize();
+        this.winningPlayer.text = winningPlayer;
+    }
+
+    public Sprite GetWinTypeSprite(string winType)
+    {
         for (int i = 0; i < winTypes.Length; i++)
         {
-            if (winTypes[i].winType == winType) 
-            {
-                winTypeImage.sprite = winTypes[i].sprite;
-                winTypeImage.SetNativeSize();
-                this.winningPlayer.text = winningPlayer;
-                break;
-            }
+            if (winTypes[i].winType == winType) { return winTypes[i].sprite; }
         }
+        return null;
     }
 }

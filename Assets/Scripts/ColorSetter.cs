@@ -10,13 +10,16 @@ public class ColorSetter : MonoBehaviour
     void Start()
     {
         if (material == null) { material = GetComponent<Renderer>().material; }
-        
-        material.color = new Color(Random.Range(0, 1.0f), Random.Range(0, 1.0f), Random.Range(0, 1.0f),1);
+
+        Color color = new Color(Random.Range(0, 1.0f), Random.Range(0, 1.0f), Random.Range(0, 1.0f));
+        material.color = color;
+        //material.SetColor("_EmissionColor", color);
 
         if (grayScale)
         {
             float val = Random.Range(.25f, 1);
             material.color = new Color(val, val, val, 1);
+            //material.SetColor("_EmissionColor", new Color(val, val, val, 1));
         }
     }
 }

@@ -58,49 +58,31 @@ public static class PokerHands
     }
 
 
-    public static string GetBestFiveCardsCombination (List<int> communityCards, List<int> holdemHand)
+    public static string GetBestFiveCardsCombination (List<int> pokerHand, out string winType)
     {
-        List<List<int>> possibleHands = new List<List<int>>()
-        {
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[1], communityCards[2], communityCards[3], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[2], communityCards[3], communityCards[4], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[3], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[4], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[1], communityCards[2], communityCards[4], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[1], communityCards[3], communityCards[4], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[0], communityCards[2], communityCards[3], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[0], communityCards[2], communityCards[4], holdemHand[0], holdemHand[1] },
-            new List<int>(){ communityCards[0], communityCards[3], communityCards[4], holdemHand[0], holdemHand[1] },
+        List<List<int>> allCombinations = new List<List<int>>();
+        if (CardGame.ins.cardsPerPlayer == 2) { allCombinations = PokerShowdownHandCombinations.GetHoldemCombinations(pokerHand); }
+        if (CardGame.ins.cardsPerPlayer == 4) { allCombinations = PokerShowdownHandCombinations.GetOmahaCombinations(pokerHand); }
 
-            new List<int>(){ holdemHand[0],     communityCards[1], communityCards[2], communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], holdemHand[0],     communityCards[2], communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], holdemHand[0],     communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], holdemHand[0],     communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], communityCards[3], holdemHand[0] },
-            new List<int>(){ holdemHand[1],     communityCards[1], communityCards[2], communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], holdemHand[1],     communityCards[2], communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], holdemHand[1],     communityCards[3], communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], holdemHand[1],     communityCards[4] },
-            new List<int>(){ communityCards[0], communityCards[1], communityCards[2], communityCards[3], holdemHand[1] },
-        };
-
-        WinningHands winningHands = GetWinningHands(possibleHands);
+        WinningHands winningHands = GetWinningHands(allCombinations);
 
         string cards = string.Empty;
-        for (int i = 0; i < 5; i++)
-        {
-            cards += winningHands.winners[0][i] + ",";
-        }
+        for (int i = 0; i < 5; i++) { cards += winningHands.winners[0][i] + ","; }
 
+        winType = winningHands.winType.ToString();
         return cards;
     }
 
-    
+    public static string GetBestFiveCardsCombination(List<int> pokerHand)
+    {
+        string winType = string.Empty;
+        return GetBestFiveCardsCombination(pokerHand,out winType);
+    }
+
+
     static WinningHands GetWinningHands(List<List<int>> hands)
     {
-        if (hands.Count == 1) { return new WinningHands() { winType = WinTypes.None, winners = hands }; }
+        if (hands.Count == 1) { return new WinningHands() { winType = GetCombinationType(new CardGameHand(hands[0])), winners = hands }; }
 
         List<CardGameHand> cardGameHands = new List<CardGameHand>();
         for (int i = 0; i < hands.Count; i++) { cardGameHands.Add(new CardGameHand(hands[i])); }
@@ -133,8 +115,8 @@ public static class PokerHands
         winType = WinTypes.StraightFlush;
         int handAStraightFlushIndex = handA.GetSequenceInSameColor();
         int handBStraightFlushIndex = handB.GetSequenceInSameColor();
-        if (handAStraightFlushIndex > handBStraightFlushIndex) { return handA; }
-        if (handBStraightFlushIndex > handAStraightFlushIndex) { return handB; }
+        if (handAStraightFlushIndex >  handBStraightFlushIndex) { return handA; }
+        if (handBStraightFlushIndex >  handAStraightFlushIndex) { return handB; }
 
         winType = WinTypes.FourOfAKind;
         int handAFourOfAKindIndex = handA.GetHighestFourOfAKind();
@@ -202,6 +184,20 @@ public static class PokerHands
 
         winType = WinTypes.HighCard;
         return GetHigherRankingHand(handA, handB);
+    }
+
+    static WinTypes GetCombinationType(CardGameHand hand)
+    {
+        if (hand.GetSequenceInSameColor() == 14) { return WinTypes.RoyalFlush;}
+        if (hand.GetSequenceInSameColor() > 0)   { return WinTypes.StraightFlush; }
+        if (hand.GetHighestFourOfAKind() > 0)    { return WinTypes.FourOfAKind; }
+        if (IsFullHouse(hand).Count == 2)        { return WinTypes.FullHouse; }
+        if (hand.AreCardsSameColor())            { return WinTypes.Flush; }
+        if (hand.GetSequence() > 0)              { return WinTypes.Straight; }
+        if (hand.GetHighestThreeOfAKind() > 0)   { return WinTypes.ThreeOfAKind; }
+        if (hand.GetPairs().Count == 2)          { return WinTypes.TwoPairs; }
+        if (hand.GetPairs().Count == 1)          { return WinTypes.Pairs; }
+        return WinTypes.HighCard;
     }
 
 

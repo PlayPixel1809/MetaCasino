@@ -95,13 +95,14 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
             expectedProps.Add(matchmakingProperties[i], startProperties[matchmakingProperties[i]]);
         }
 
-        PhotonNetwork.JoinRandomRoom(expectedProps, Convert.ToByte(maxPlayers));
+        //PhotonNetwork.JoinRandomRoom(expectedProps, Convert.ToByte(maxPlayers));
+        PhotonNetwork.JoinRoom(roomName);
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message) 
     {
         Debug.Log("OnJoinRoomFailed");
-        
+        CreateRoom();
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message)
@@ -133,7 +134,7 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         roomOptions.EmptyRoomTtl = 3000;
         roomOptions.PlayerTtl = 3000;
 
-        PhotonNetwork.CreateRoom(string.Empty, roomOptions);
+        PhotonNetwork.CreateRoom(roomName);
     }
 
     public override void OnCreatedRoom()
@@ -206,9 +207,9 @@ public class Room : MonoBehaviourPunCallbacks, IOnEventCallback
         for (int i = 0; i < properties.Count; i++)
         {
             if (PhotonNetwork.CurrentRoom == null)
-            { startProperties.Add(properties[i].key, properties[i].GetVal()); }
+            { startProperties.Add(properties[i].key, properties[i].GetValue()); }
             else
-            { ph.SetRoomData(properties[i].key, properties[i].GetVal()); }
+            { ph.SetRoomData(properties[i].key, properties[i].GetValue()); }
         }
     }
 

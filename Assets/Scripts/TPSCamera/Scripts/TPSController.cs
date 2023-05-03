@@ -25,6 +25,7 @@ public class TPSController : MonoBehaviour
     public Action onMove;
     public Action onCharacterIdle;
 
+   
 
     void Start()
     {
@@ -76,6 +77,8 @@ public class TPSController : MonoBehaviour
         Vector3 right = transform.TransformDirection(Vector3.right);
         Vector3 moveDirection = (forward * -amount.x) + (right * amount.z);
 
+        //moveDirection = new Vector3(moveDirection.x, -100, moveDirection.z);
+
         characterController.Move(moveDirection * Time.deltaTime);
 
         lookAtHelper.localPosition = new Vector3(amount.z, 0, -amount.x);
@@ -85,6 +88,8 @@ public class TPSController : MonoBehaviour
 
     void Update()
     {
+        characterController.Move(new Vector3(0, -10, 0));
+
         if (joystickActive) { return; }
         
         float characterX = Input.GetAxis("Vertical");

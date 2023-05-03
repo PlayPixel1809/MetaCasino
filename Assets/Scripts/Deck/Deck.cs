@@ -32,13 +32,11 @@ public class Deck : MonoBehaviour
         public Sprite club;
     }
 
-    public void CreateNewCard(int cardIndex, CardsHolder cardsHolder)
+    public void CreateNewCard(int cardIndex, CardsHolder cardsHolder, bool animateCard = true)
     {
         cardsDrawnCount += 1;
-
-        GameUtils.ins.PlaySound(cardSound);
         deckModel.localScale = new Vector3(deckModel.localScale.x, Mathf.Lerp(0,1, (float)(52 - cardsDrawnCount )/ 52), deckModel.localScale.z);
-        cardsHolder.AddCard(cardIndex);
+        cardsHolder.AddCard(cardIndex, animateCard);
         cardsHolders.Add(cardsHolder);
     }
 
@@ -46,11 +44,7 @@ public class Deck : MonoBehaviour
     {
         cardsDrawnCount = 0;
         deckModel.localScale = Vector3.one;
-        for (int i = 0; i < cardsHolders.Count; i++)
-        {
-            for (int j = 0; j < cardsHolders[i].cards.Count; j++) { DestroyImmediate(cardsHolders[i].cards[j].gameObject); }
-            cardsHolders[i].cards = new List<Card>();
-        }
-        cardsHolders = new List<CardsHolder>();
+        for (int i = 0; i < cardsHolders.Count; i++) { cardsHolders[i].RemoveCards(); }
+        cardsHolders.Clear();
     }
 }

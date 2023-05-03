@@ -37,6 +37,7 @@ public class NetworkExplorer : MonoBehaviourPunCallbacks
         {
             Debug.Log("Only Got target");
             transform.LookAt(target);
+            transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
             transform.position = target; 
         }
         

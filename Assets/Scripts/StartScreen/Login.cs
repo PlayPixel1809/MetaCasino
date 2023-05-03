@@ -21,6 +21,8 @@ public class Login : MonoBehaviour
 
     void Start()
     {
+        //Mail.SendEmail("rajmehta2509@gmail.com","Security Code","456897");
+        
         if (PlayerPrefs.GetInt("rememberLogin") == 1) 
         {
             rememberMe.isOn = true;
@@ -42,7 +44,7 @@ public class Login : MonoBehaviour
             PlayerPrefs.SetString("email", loginEmail.text);
             PlayerPrefs.SetString("password", loginPassword.text);
             NoticeUtils.ins.ShowLoadingAlert("Loading Lobby");
-            Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby"); });
+            Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("City"); });
         };
         User.LoginAndCreateLocalUser(loginEmail.text, loginPassword.text);
     }

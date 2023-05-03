@@ -1,29 +1,54 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class TurnGameClient : MonoBehaviour
 {
     public static TurnGameClient ins;
     void Awake() { ins = this; }
 
-    public int turnTime = 5;
-
     public Transform camLookAtPoint;
     public Timer lpTimer;
 
-
-    [HideInInspector]
-    public List<TurnGameSeat> seats = new List<TurnGameSeat>();
-
+    public Action onRoomJoined;
+    public Action onSeatAssigned;
+    public Action<ExitGames.Client.Photon.Hashtable> onTurnMissed;
 
     [Header("Assigned During Game -")]
+    public List<TurnGameSeat> seats = new List<TurnGameSeat>();
+    public int turnTime;
     public int turn;
+
 
     void Start()
     {
         StartCoroutine("AssignSeats");
+
+        NetworkGameClient.ins.onRoomJoined += () =>
+        {
+            onRoomJoined?.Invoke();
+        };
+
+
+        NetworkGameClient.ins.onSeatAssigned += () =>
+        {
+            if (ph.GetRoomData("playersMoves") != null) 
+            {
+                string[] playersMoves = (string[])ph.GetRoomData("playersMoves");
+                for (int i = 0; i < playersMoves.Length; i++) { if (playersMoves[i] != "Null") { seats[i].MakeMove(playersMoves[i]); }}
+            }
+            onSeatAssigned?.Invoke();
+        };
+
+
         ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
+
+        NetworkGameClient.ins.onGameComplete += () =>
+        {
+            for (int i = 0; i < seats.Count; i++) { seats[i].ResetMoveMade(); }
+        };
     }
 
     IEnumerator AssignSeats()
@@ -33,26 +58,37 @@ public class TurnGameClient : MonoBehaviour
         for (int i = 0; i < NetworkRoomClient.ins.seats.Count; i++) { seats.Add(NetworkRoomClient.ins.seats[i].GetComponent<TurnGameSeat>()); }
     }
 
-    public void OnServerMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)
+    public void OnServerMsgRecieved(string evId, ExitGames.Client.Photon.Hashtable data)
     {
-        if (hashtable["turn"] != null) 
-        {
-            Debug.Log("TurnRecieved");
-            
-            turn = (int)hashtable["turn"];
-            seats[turn].StartTurn(); 
-        }
+        //Debug.Log(evId);
+        if (evId == "SetTurnGameData") { turnTime = (int)data["turnTime"]; }
 
-        if (hashtable["moveMade"] != null)
-        {
-            seats[turn].StopTurn();
+        if (evId.IndexOf("ExecuteTurn") > -1)  { StartCoroutine("ExecuteTurn", data); }
 
-            float moveAmount = 0;
-            if (hashtable["moveAmount"] != null) { moveAmount = (float)hashtable["moveAmount"]; }
-            seats[(int)hashtable["moveMadeBy"]].MakeMove((string)hashtable["moveMade"], moveAmount);
-        }
-
+        if (evId == "MakeMove") { StartCoroutine("MakeMove", data); }
     }
 
 
+    IEnumerator ExecuteTurn(ExitGames.Client.Photon.Hashtable data)
+    {
+        Debug.Log("TurnRecieved");
+        turn = (int)data["turnIndex"];
+        seats[turn].ExecuteTurn();
+        yield return new WaitForSeconds(turnTime);
+        onTurnMissed?.Invoke(data);
+        
+    }
+
+    IEnumerator MakeMove(ExitGames.Client.Photon.Hashtable data)
+    {
+        StopCoroutine("ExecuteTurn");
+        seats[turn].StopTurn();
+
+        float moveAmount = 0;
+        if (data["moveAmount"] != null) { moveAmount = (float)data["moveAmount"]; }
+        seats[(int)data["moveMadeBy"]].MakeMove((string)data["moveMade"], moveAmount);
+
+        yield return new WaitForSeconds(1);
+        ServerClientBridge.ins.NotifyServerIfMasterClient("MakeMove");
+    }
 }

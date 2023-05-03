@@ -1,73 +1,89 @@
-using Photon.Pun;
-using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetworkRoom : MonoBehaviourPunCallbacks
+public class NetworkRoom : MonoBehaviour
 {
     public static NetworkRoom ins;
     void Awake() { ins = this; }
 
     public bool nonAuthoritativeServer = true;
+    public bool assignRandomSeat;
 
-    public float minBet = 1000;
-    public float minBalance = 10000;
 
     [Header("Assigned During Game -")]
     public int[] seats; // Sent To Clients
 
     public Action onRoomCreated;
 
-    public Action<int> onSeatAssigned;
-    public Action<int> onSeatVaccated;
+    public Action<int, int> onSeatAssigned;
+    public Action<int, int> onSeatVaccated;
 
     void Start()
     {
         seats = new int[NetworkRoomClient.ins.seats.Count];
+
+        ServerClientBridge.ins.onPhotonMsgRecieved += OnPhotonMsgRecieved;
+
+        ServerClientBridge.ins.onMadeMasterClient += ()=> 
+        {
+            if (ph.GetRoomData("seats") != null) { seats = (int[])ph.GetRoomData("seats"); }
+        };
     }
 
-    public override void OnCreatedRoom()
+    void OnPhotonMsgRecieved(int sender, string msg)
     {
-        OnPlayerEnteredRoom(PhotonNetwork.LocalPlayer);
+        if (msg == "roomCreated")       { RoomCreated(sender); }
+        if (msg == "playerEnteredRoom") { PlayerEnteredRoom(sender); }
+        if (msg == "playerLeftRoom")    { PlayerLeftRoom(sender); }
+    }
+
+
+    public void RoomCreated(int creatorActorNo)
+    {
+        PlayerEnteredRoom(creatorActorNo);
         onRoomCreated?.Invoke();
     }
 
-    public override void OnPlayerEnteredRoom(Player player)
+    public void PlayerEnteredRoom(int actorNo)
     {
-        if (!PhotonNetwork.IsMasterClient) { return; }
+        int seatIndex = -1;
+        if (assignRandomSeat)
+        {
+            List<int> availableSeats = new List<int>();
+            for (int i = 0; i < seats.Length; i++) { if (seats[i] == 0) { availableSeats.Add(i); } }
+            if (availableSeats.Count > 0) { seatIndex = availableSeats[UnityEngine.Random.Range(0, availableSeats.Count)]; }
+        }
+        else
+        {
+            for (int i = 0; i < seats.Length; i++) 
+            { 
+                if (seats[i] == 0) { seatIndex = i; break; } 
+            }
+        }
 
-        List<int> availableSeats = new List<int>();
-        for (int i = 0; i < seats.Length; i++) { if (seats[i] == 0) { availableSeats.Add(i); } }
-        int randSeat = availableSeats[UnityEngine.Random.Range(0, availableSeats.Count)];
-
-        //temp code
-        randSeat = seats.Length - availableSeats.Count;
-        //temp code
-
-        availableSeats.Remove(randSeat);
-        seats[randSeat] = player.ActorNumber;
-
-        onSeatAssigned?.Invoke(randSeat);
-
-
-        SyncData("seats", seats);
-        ServerClientBridge.NotifyClients("seats", seats);
+        if (seatIndex > -1)
+        {
+            seats[seatIndex] = actorNo;
+            SyncData("seats", seats);
+            ServerClientBridge.ins.NotifyClients("PlayerEnteredRoom", "seats", seats);
+            onSeatAssigned?.Invoke(seatIndex, actorNo);
+        }
     }
 
-    public override void OnPlayerLeftRoom(Player player)
+    public void PlayerLeftRoom(int actorNo)
     {
-        if (!PhotonNetwork.IsMasterClient) { return; }
-
-        int[] seats = (int[])ph.GetRoomData("seats");
         for (int i = 0; i < seats.Length; i++)
         {
-            if (seats[i] == player.ActorNumber)
+            if (seats[i] == actorNo)
             {
                 seats[i] = 0;
-                onSeatVaccated?.Invoke(i);
-                ph.SetRoomData("seats", seats);
+
+                SyncData("seats", seats);
+                ServerClientBridge.ins.NotifyClients("PlayerLeftRoom", "seats", seats);
+
+                onSeatVaccated?.Invoke(i, actorNo);
                 return;
             }
         }

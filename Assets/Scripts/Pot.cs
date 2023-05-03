@@ -38,6 +38,13 @@ public class Pot : MonoBehaviour
 
         if (amountGraphic != null && GetPotAmount() > 0) { amountGraphic.gameObject.SetActive(true); }
     }
+    public void AddAmount(float amount, string seats)
+    {
+        string[] seatsArray = seats.Split(new string[1] { "," }, System.StringSplitOptions.RemoveEmptyEntries);
+        int[] seatIndexes = new int[seatsArray.Length];
+        for (int i = 0; i < seatsArray.Length; i++) {seatIndexes[i] = int.Parse(seatsArray[i]);}
+        AddAmount(amount, seatIndexes);
+    }
 
     public void SubtractAmount(float amount)
     {
@@ -68,4 +75,24 @@ public class Pot : MonoBehaviour
     {
         outline.SetActive(false);
     }
+
+    public int GetPotIndex(Pot[] pots)
+    {
+        for (int i = 0; i < pots.Length; i++)
+        {
+            if (pots[i] == this) { return i; }
+        }
+        return -1;
+    }
+
+    public static Pot GetInActivePot(Pot[] pots)
+    {
+        for (int i = 0; i < pots.Length; i++)
+        {
+            if (!pots[i].gameObject.activeInHierarchy) { return pots[i]; }
+        }
+        return null;
+    }
+
+    
 }

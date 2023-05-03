@@ -28,6 +28,7 @@ public class SimpleCharacterController : MonoBehaviour
         Vector3 targetDirection = target - transform.position;
         Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, 10 * Time.deltaTime, 0.0f);
         transform.rotation = Quaternion.LookRotation(newDirection);
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
     }
 
     public void Walk(Vector3 target)

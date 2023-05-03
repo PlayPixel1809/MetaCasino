@@ -42,7 +42,8 @@ public class CardsHolder : MonoBehaviour
             if (cardsParent.GetChild(i).gameObject.activeInHierarchy)
             {
                 Card activeCard = cardsParent.GetChild(i).GetChild(0).GetComponent<Card>();
-                activeCard.transform.parent.gameObject.SetActive(false);
+                activeCard.RemoveHighlight();
+                cardsParent.GetChild(i).gameObject.SetActive(false);
                 cards.Remove(activeCard);
             }
         }
@@ -61,13 +62,16 @@ public class CardsHolder : MonoBehaviour
     {
         for (int i = 0; i < cardsParent.childCount; i++)
         {
-            if (!cardsParent.GetChild(i).gameObject.activeSelf)
+            if (!cardsParent.GetChild(i).gameObject.activeInHierarchy)
             {
                 Card inActiveCard = cardsParent.GetChild(i).GetChild(0).GetComponent<Card>();
-                inActiveCard.transform.parent.gameObject.SetActive(true);
+                cardsParent.GetChild(i).gameObject.SetActive(true);
                 inActiveCard.SetCard(cardIndex, Deck.ins);
                 cards.Add(inActiveCard);
-                if (animate) { StartCoroutine(AnimateCard(inActiveCard.transform)); }
+                if (animate) { StartCoroutine(AnimateCard(inActiveCard.transform)); } else 
+                {
+                    if (revealCard) { inActiveCard.GetComponent<Card>().RevealCard(); }
+                }
                 return inActiveCard;
             }
         }
@@ -78,6 +82,7 @@ public class CardsHolder : MonoBehaviour
 
     IEnumerator AnimateCard(Transform card)
     {
+        AudioSource.PlayClipAtPoint(Deck.ins.cardSound, Camera.main.transform.position);
         card.position = Deck.ins.cardSpawnPoint.position;
         card.rotation = Deck.ins.cardSpawnPoint.rotation;
 

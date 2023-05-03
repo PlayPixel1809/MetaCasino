@@ -20,20 +20,20 @@ public partial class User
 
     
 
-    public void AddCoins(float amount, Action onAdd = null, bool showNotification = false)
+    public void ChangeBalance(float amount, Action onAdd = null, string notice = "")
     {
-        UpdateDB("balance", (balance + amount).ToString(), "Please Wait", () =>
+        Debug.Log(amount);
+        UpdateDB("balance", (balance + amount).ToString(), notice, () =>
         {
             balance += amount;
-            UpdateCurrencyUI(amount, "Coins", showNotification);
             onAdd?.Invoke();
         });
     }
 
-    public void DeductCoins(float amount, Action onDeduct = null)
+    public void DeductBalance(float amount, Action onDeduct = null, string notice = "")
     {
         if (balance < amount) { NoticeUtils.ins.ShowOneBtnAlert("You have insufficient coins"); return; }
-        UpdateDB("balance", (balance - amount).ToString(), "Please Wait", () =>
+        UpdateDB("balance", (balance - amount).ToString(), notice, () =>
         {
             balance -= amount;
             onDeduct?.Invoke();

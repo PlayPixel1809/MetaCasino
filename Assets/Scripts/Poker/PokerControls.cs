@@ -32,7 +32,7 @@ public class PokerControls : MonoBehaviour
     public void PlayerControlBtn(Transform btn)
     {
         gameObject.SetActive(false);
-
+        TurnGameClient.ins.lpTimer.gameObject.SetActive(false);
         string btnName = btn.GetChild(1).GetComponent<Text>().text;
         string moveName = GetMoveName(btnName);
         float moveAmount = GetMoveAmount(btnName);
@@ -40,7 +40,8 @@ public class PokerControls : MonoBehaviour
         ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
         data.Add("moveMade", moveName);
         if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
-        ServerClientBridge.NotifyServer(data);
+
+        ServerClientBridge.ins.NotifyServer("ExecuteTurn" + TurnGameClient.ins.turn, data);
     }
 
     string GetMoveName(string btnName)
@@ -113,7 +114,7 @@ public class PokerControls : MonoBehaviour
         if (currentBet == 0) 
         { 
             btntext = "BET";
-            raiseAmount = PokerClient.ins.smallBlind * 2;
+            raiseAmount = NetworkGame.ins.minBet * 2;
         }
         
         if (callBtnTxt.text.IndexOf("ALL IN") > -1)

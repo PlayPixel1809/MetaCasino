@@ -3490,7 +3490,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   validateInputs: 1
-  verifyEmail: 1
+  verifyEmail: 0
   startBalance: 700000
   signupUsername: {fileID: 853624453}
   signupEmail: {fileID: 1527523860}

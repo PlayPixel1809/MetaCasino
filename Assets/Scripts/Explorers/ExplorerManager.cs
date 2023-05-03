@@ -24,6 +24,11 @@ public class ExplorerManager : MonoBehaviour
         Room.ins.onPlayerLeftRoom += OnPlayerLeftLobby;
     }
 
+    public void GetBalanceBtn()
+    {
+        User.localUser.ChangeBalance(50000, PlayerInfoPanel.ins.SetInfo, "Please Wait..");
+    }
+
     void SpawnExplorers(Player player)
     {
         localCharacter.gameObject.AddComponent<LocalExplorer>();

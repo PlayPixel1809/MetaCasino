@@ -11,7 +11,7 @@ public class BotManager : MonoBehaviourPunCallbacks
     public void Awake() { ins = this; }
 
     public int botsCount = 2;
-
+    public bool playForBots;
 
     public List<Player> bots;
     public Action<List<KeyValue>> onBotInitiated;
@@ -20,11 +20,6 @@ public class BotManager : MonoBehaviourPunCallbacks
     void Start()
     {
         NetworkRoom.ins.onRoomCreated += CreateInitialBots;
-
-        TurnGame.ins.onTurn += (s) =>
-        {
-            //if (NetworkRoom.ins.seats[s] < 0) { CreateMoveForBot(s); }
-        };
     }
 
     public Player GetBot(int botIndex)
@@ -90,9 +85,9 @@ public class BotManager : MonoBehaviourPunCallbacks
         }
 
         ph.SetRoomData("bot" + botRoomIndex + "username", "Bot " + MathF.Abs(botRoomIndex));
-        ph.SetRoomData("bot" + botRoomIndex + "balance", (float)(-botRoomIndex * 40000));
+        ph.SetRoomData("bot" + botRoomIndex + "balance", (float)(-botRoomIndex * 100000));
 
-        NetworkRoom.ins.OnPlayerEnteredRoom(new Player() { ActorNumber = botRoomIndex });
+        ServerClientBridge.ins.OnPlayerEnteredRoom(new Player() { ActorNumber = botRoomIndex });
     }
 
 
@@ -128,7 +123,7 @@ public class BotManager : MonoBehaviourPunCallbacks
             data.Add("moveMade", moveName);
             if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
 
-            ServerClientBridge.ins.onClientMsgRecieved.Invoke(NetworkRoom.ins.seats[seatIndex], data);
+            //ServerClientBridge.ins.onClientMsgRecieved.Invoke(NetworkRoom.ins.seats[seatIndex], data);
         });
 
     }

@@ -9,31 +9,39 @@ using UnityEngine;
 public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     public static NetworkRoomClient ins;
-    void Awake() { ins = this; }
+    void Awake() 
+    { 
+        ins = this; 
+        expectedCustomRoomProperties = new List<KeyValue>(); 
+    }
+
+    public RoomOptions roomOptions;
 
     public string defaultEmail;
     public string defaultPassword;
     public bool loginInfoFromPlayerPrefs;
 
     public string roomName;
-    public List<KeyValue> initialProperties;
-    public List<string> matchmakingProperties;
-    public int maxPlayers = 5;
+    public int maxPlayers;
+    public int emptyRoomTtl;
+    public int playerTtl;
+
+    public List<KeyValue> customRoomProperties;
+    public List<string> customRoomPropertiesForLobby;
 
     public Transform mainCam;
 
     public uiLabel lpName;
     public List<NetworkRoomSeat> seats;
 
-
-    public ExitGames.Client.Photon.Hashtable startProperties = new ExitGames.Client.Photon.Hashtable();
+    [Header("Assigned During Game -"), Space]
+    public List<KeyValue> expectedCustomRoomProperties;
 
     public Action onConnectedToMaster;
-    public Action onRoomCreated;
-    public Action onRoomJoined;
+    public Action onJoinRoom;
+    public Action onSeatAssigned;
     public Action<ExitGames.Client.Photon.Hashtable> onRoomPropertiesChanged;
     public Action onRoomLeft;              // This runs when local player leaves current room
-    private Action onRoomLeft_;
 
     public Action<string, string, string, string> onEvent;
 
@@ -44,12 +52,11 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         //Debug.Log(PhotonNetwork.NetworkClientState);
         //if (Input.GetKey("a")) { AudioSource.PlayClipAtPoint(); }
+        
     }
 
     void Start()
     {
-        AddPropertiesToRoom(initialProperties);
-
         if (User.localUser != null) { Initiate(); }
         else
         {
@@ -64,17 +71,19 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
         ServerClientBridge.ins.onServerMsgRecieved += OnMsgRecieved;
     }
 
-    public void OnMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)
+    public void OnMsgRecieved(string evId, ExitGames.Client.Photon.Hashtable data)
     {
-        if (hashtable.ContainsKey("seats"))
+        if (evId == "PlayerEnteredRoom" || evId == "PlayerLeftRoom")
         {
-            int[] modifiedSeats = (int[])hashtable["seats"];
+            int[] modifiedSeats = (int[])data["seats"];
             for (int i = 0; i < seats.Count; i++)
             {
-                if (modifiedSeats[i] != 0 && seats[i].actorNo == 0) { seats[i].OccupySeat(modifiedSeats[i]); }
+                if (modifiedSeats[i] != 0 && seats[i].actorNo == 0) 
+                {
+                    seats[i].OccupySeat(modifiedSeats[i]);
+                    if (modifiedSeats[i] == ph.GetLocalPlayer().ActorNumber) { onSeatAssigned?.Invoke(); }
+                }
                 if (modifiedSeats[i] == 0 && seats[i].actorNo != 0) { seats[i].VaccateSeat(); }
-
-                seats[i].actorNo = modifiedSeats[i];
             }
         }
     }
@@ -108,15 +117,18 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     public void JoinRoom()
     {
         Debug.Log("JoiningRandomRoom");
+        onJoinRoom?.Invoke();
+
         NoticeUtils.ins.ShowLoadingAlert("Joining Random Room");
 
-        ExitGames.Client.Photon.Hashtable expectedProps = new ExitGames.Client.Photon.Hashtable();
-        for (int i = 0; i < matchmakingProperties.Count; i++)
+        if (string.IsNullOrEmpty(roomName))
         {
-            expectedProps.Add(matchmakingProperties[i], startProperties[matchmakingProperties[i]]);
+            PhotonNetwork.JoinRandomRoom(KeyValue.GetHashtableFromKeyValueList(expectedCustomRoomProperties), Convert.ToByte(maxPlayers));
         }
-
-        PhotonNetwork.JoinRandomRoom(expectedProps, Convert.ToByte(maxPlayers));
+        else
+        { 
+            PhotonNetwork.JoinRoom(roomName); 
+        }
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
@@ -134,9 +146,7 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
 
     public override void OnJoinedRoom()
     {
-        Debug.Log("OnJoinedRoom");
         NoticeUtils.ins.HideLoadingAlert();
-        onRoomJoined?.Invoke();
     }
 
     public void CreateRoom()
@@ -144,28 +154,21 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
         Debug.Log("CreatingRoom");
         NoticeUtils.ins.ShowLoadingAlert("CREATING ROOM, PLEASE WAIT ");
 
-        RoomOptions roomOptions = new RoomOptions() { MaxPlayers = 2 };
+        RoomOptions roomOptions = new RoomOptions();
 
-        startProperties.Add("status", string.Empty);
-        startProperties.Add("data", string.Empty);
-        roomOptions.CustomRoomPropertiesForLobby = matchmakingProperties.ToArray();
-        roomOptions.CustomRoomProperties = startProperties;
-        if (maxPlayers > 0) { roomOptions.MaxPlayers = Convert.ToByte(maxPlayers); }
+        roomOptions.MaxPlayers = Convert.ToByte(maxPlayers); 
         roomOptions.EmptyRoomTtl = 3000;
         roomOptions.PlayerTtl = 3000;
 
-        PhotonNetwork.CreateRoom(string.Empty, roomOptions);
-    }
+        roomOptions.CustomRoomProperties = KeyValue.GetHashtableFromKeyValueList(customRoomProperties);
+        roomOptions.CustomRoomPropertiesForLobby = customRoomPropertiesForLobby.ToArray();
 
-    public override void OnCreatedRoom()
-    {
-        Debug.Log("RoomCreated");
-        onRoomCreated?.Invoke();
+        PhotonNetwork.CreateRoom(roomName, roomOptions);
     }
 
     public void LeaveGameRoom(Action onRoomLeft)
     {
-        this.onRoomLeft_ = onRoomLeft;
+        this.onRoomLeft = onRoomLeft;
         PhotonNetwork.LeaveRoom();
     }
 
@@ -173,7 +176,6 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         ph.RemovePlayerData(PhotonNetwork.LocalPlayer);
         onRoomLeft?.Invoke();
-        onRoomLeft_?.Invoke();
     }
 
     public static void SendEvent(string evClass, string evName, string data = "")
@@ -213,27 +215,7 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
         return false;
     }
 
-    public void AddPropertiesToRoom(List<KeyValue> properties)
-    {
-        for (int i = 0; i < properties.Count; i++)
-        {
-            if (PhotonNetwork.CurrentRoom == null)
-            { startProperties.Add(properties[i].key, properties[i].GetVal()); }
-            else
-            { ph.SetRoomData(properties[i].key, properties[i].GetVal()); }
-        }
-    }
-
-    public ExitGames.Client.Photon.Hashtable GetRoomProperties()
-    {
-        if (PhotonNetwork.CurrentRoom != null)
-        {
-            return PhotonNetwork.CurrentRoom.CustomProperties;
-        }
-        else
-        { return startProperties; }
-    }
-
+    
     public static void CloseRoom()
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;

@@ -72,7 +72,7 @@ public class Register : MonoBehaviour
                 CreateLocalUser(playFabId);
 
                 NoticeUtils.ins.ShowLoadingAlert("Loading Lobby");
-                Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby"); });
+                Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("City"); });
             });
         });
     }

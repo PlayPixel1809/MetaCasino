@@ -9,11 +9,16 @@ public class Pocket : MonoBehaviour
     public GameObject amountGraphic;
     [SerializeField] private AudioClip depositSound;
 
-    private Vector3 amountGraphicLocalPos;
+    private Vector3 amountGraphicRecPos;
+    private bool amountGraphicPosRec;
 
     void Start()
     {
-        if (amountGraphic != null) { amountGraphicLocalPos = amountGraphic.transform.localPosition; }
+        if (amountGraphic != null) 
+        {
+            amountGraphicRecPos = amountGraphic.transform.localPosition;
+            amountGraphicPosRec = true;
+        }
     }
 
     public void ResetAmount()
@@ -31,7 +36,7 @@ public class Pocket : MonoBehaviour
         if (amountGraphic != null) 
         { 
             amountGraphic.gameObject.SetActive(false);
-            amountGraphic.transform.localPosition = amountGraphicLocalPos;
+            if (amountGraphicPosRec) { amountGraphic.transform.localPosition = amountGraphicRecPos; }
         }
     }
 

@@ -7,13 +7,9 @@ using UnityEngine.UI;
 
 public class TurnGameSeat : MonoBehaviour
 {
-    
-
     public uiLabel moveMade;
-    
 
     public Timer timer;
-    public Timer timer3D;
 
     public Action onTurnActive;
 
@@ -35,31 +31,30 @@ public class TurnGameSeat : MonoBehaviour
             }
         };
 
+        networkRoomSeat.onSeatVaccated += () =>
+        {
+            ResetMoveMade();
+            StopTurn();
+        };
     }
     
-    public void StartTurn()
+    public void ExecuteTurn()
     {
         if (networkRoomSeat.player.IsLocal) { NetworkGameClient.ins.lpControls.SetActive(true); }
         timer.StartTimer(TurnGameClient.ins.turnTime, null);
-        timer3D.StartTimer(TurnGameClient.ins.turnTime, null);
     }
 
     public void StopTurn()
     {
-        NetworkGameClient.ins.lpControls.SetActive(false);
+        NetworkGameClient.ins.lpControls.SetActive(false); 
         timer.gameObject.SetActive(false);
-        timer3D.gameObject.SetActive(false);
     }
 
     public void MakeMove(string moveName, float amount = 0)
     {
         moveMade.SetLabel(moveName);
 
-        if (amount > 0)
-        {
-            networkGameSeat.playerBalance.SubtractAmount(amount);
-            ph.ChangePlayerData(networkRoomSeat.player, "balance", -amount);
-        }
+        if (amount > 0) { networkGameSeat.SubtractBalance(amount); }
     }
 
     
@@ -67,11 +62,12 @@ public class TurnGameSeat : MonoBehaviour
     public void MoveMade()
     {
         timer.gameObject.SetActive(false);
-        timer3D.gameObject.SetActive(false);
     }
 
     public void ResetMoveMade()
     {
         moveMade.Reset();
     }
+
+    
 }

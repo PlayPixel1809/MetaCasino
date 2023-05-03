@@ -29,21 +29,22 @@ public class CardGameSeat : MonoBehaviour
             
         };
 
+        networkRoomSeat.onSeatVaccated += () =>
+        {
+            cards3D.RemoveCards();
+        };
     }
 
+    public void CreateCards(string[] cardsIndexes, bool animateCards = true) { StartCoroutine(CreateCardsCoroutine(cardsIndexes, animateCards)); }
 
-
-    public IEnumerator CreateCards(string[] cardsIndexes)
+    IEnumerator CreateCardsCoroutine(string[] cardsIndexes, bool animateCards = true)
     {
         this.cardsIndexes = cardsIndexes;
         for (int i = 0; i < cardsIndexes.Length; i++)
         {
-            Deck.ins.CreateNewCard(int.Parse(cardsIndexes[i]), cards3D);
-            yield return new WaitForSeconds(1);
+            Deck.ins.CreateNewCard(int.Parse(cardsIndexes[i]), cards3D, animateCards);
+            if (animateCards) { yield return new WaitForSeconds(1); }
         }
-        
-        //cards.CopyCards(cards3D);
-
         if (networkRoomSeat.player.IsLocal) { CardGameClient.ins.lpCards.CopyCards(cards3D, true); }
     }
 }

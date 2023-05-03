@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PokerClient : MonoBehaviour
 {
@@ -13,22 +14,69 @@ public class PokerClient : MonoBehaviour
     public CardsHolder communityCards;
     public CardsHolder tableCommunityCards;
     public CardsHolder communityCards3D;
-
-
+    public Transform cardsCombinationTypePanel;
     public Pot mainPot;
     public Pot[] sidePots;
-
     public GameObject restartBtn;
 
-    [HideInInspector] public float smallBlind;
 
-    //[HideInInspector]
+    [Header("Assigned During Game -"), Space]
     public List<PokerSeat> seats;
+    public float currentBet;
 
     void Start()
     {
         StartCoroutine("AssignSeats");
-        ServerClientBridge.ins.onServerMsgRecieved += OnMsgRecieved;
+
+        CardGameClient.ins.onRoomJoined += () =>
+        {
+            
+        };
+
+
+        CardGameClient.ins.onSeatAssigned += () =>
+        {
+            if (ph.GetRoomData("playersBetsForRound") != null)
+            {
+                float[] playersBetsForRound = (float[])ph.GetRoomData("playersBetsForRound");
+                for (int i = 0; i < playersBetsForRound.Length; i++) { if (playersBetsForRound[i] > 0) { seats[i].MakeBet(playersBetsForRound[i]); } }
+            }
+
+            if (ph.GetRoomData("communityCards") != null) 
+            {
+                int[] cards = (int[])ph.GetRoomData("communityCards");
+                for (int i = 0; i < cards.Length; i++) { Deck.ins.CreateNewCard(cards[i], communityCards3D, false); }
+                communityCards.CopyCards(communityCards3D, true);
+            }
+        };
+
+
+        ServerClientBridge.ins.onServerMsgRecieved += OnServerMsgRecieved;
+        NetworkGame.ins.onGameStart += ResetData;
+
+        TurnGameClient.ins.onTurnMissed += (data)=> 
+        {
+            string moveMade = "FOLD";
+            if (currentBet == 0) { moveMade = "CHECK"; }
+            ServerClientBridge.ins.NotifyServerIfMasterClient((string)data["evId"], "moveMade", moveMade);
+        };
+
+        NetworkGameClient.ins.onGameComplete += () =>
+        {
+            mainPot.Reset();
+            for (int i = 0; i < sidePots.Length; i++) { sidePots[i].Reset(); }
+            tableCommunityCards.RemoveCards();
+            communityCards.RemoveCards();
+            CardGameClient.ins.lpCards.RemoveCards();
+            PokerWinManager.ins.winInfoPanel.SetActive(false);
+            cardsCombinationTypePanel.gameObject.SetActive(false);
+        };
+        
+    }
+
+    public void ResetData()
+    {
+        
     }
 
     IEnumerator AssignSeats()
@@ -38,110 +86,119 @@ public class PokerClient : MonoBehaviour
         for (int i = 0; i < NetworkRoomClient.ins.seats.Count; i++) { seats.Add(NetworkRoomClient.ins.seats[i].GetComponent<PokerSeat>()); }
     }
 
-    public void OnMsgRecieved(ExitGames.Client.Photon.Hashtable hashtable)
+    public void OnServerMsgRecieved(string evId, ExitGames.Client.Photon.Hashtable data)
     {
-        if (hashtable.ContainsKey("gameStartCounter"))
+        //if (!NetworkGameClient.ins.playing) { return; }
+
+        if (evId == "MakeInitialBlinds")
         {
-            for (int i = 0; i < seats.Count; i++) { seats[i].roundBet.ResetAmount(); }
+            TurnGameClient.ins.seats[(int)data["smallBlindIndex"]].MakeMove("S-BLIND", NetworkGame.ins.minBet);
+            seats[(int)data["smallBlindIndex"]].MakeBet(NetworkGame.ins.minBet);
+
+            TurnGameClient.ins.seats[(int)data["bigBlindIndex"]].MakeMove("B-BLIND", NetworkGame.ins.minBet * 2);
+            seats[(int)data["bigBlindIndex"]].MakeBet(NetworkGame.ins.minBet * 2);
+
+            Utils.InvokeDelayedAction(1, () => { ServerClientBridge.ins.NotifyServerIfMasterClient("MakeInitialBlinds", "bigBlindIndex", data["bigBlindIndex"]); });
         }
 
-        if (hashtable.ContainsKey("smallBlindSeat")) 
+        if (evId == "StartPokerTurn")
         {
-            smallBlind = (float)hashtable["smallBlindAmount"];
-            TurnGameClient.ins.seats[(int)hashtable["smallBlindSeat"]].MakeMove("S-BLIND", smallBlind);
-            seats[(int)hashtable["smallBlindSeat"]].MakeBet(smallBlind);
+            currentBet = (float)data["currentBet"];
+            seats[TurnGameClient.ins.turn].StartTurn(currentBet, (float)data["playerBet"]);
         }
 
-        if (hashtable.ContainsKey("bigBlindSeat"))   
-        { 
-            TurnGameClient.ins.seats[(int)hashtable["bigBlindSeat"]].MakeMove("B-BLIND", (float)hashtable["bigBlindAmount"]);
-            seats[(int)hashtable["bigBlindSeat"]].MakeBet((float)hashtable["bigBlindAmount"]);
-        }
 
-        if (hashtable.ContainsKey("getPokerMove"))
+        if (evId == "MakeMove") 
         {
-            seats[TurnGameClient.ins.turn].GetPokerMove((float)hashtable["currentBet"], (float)hashtable["playerBet"]);
+            if ((string)data["moveMade"] == "FOLD") { seats[(int)data["moveMadeBy"]].MakePlayerFoldInAllPots(); }
+            if (data["moveAmount"] != null) { seats[(int)data["moveMadeBy"]].MakeBet((float)data["moveAmount"]); }
         }
+        
 
-        if (hashtable.ContainsKey("gameStartCounter"))
+        if (evId == "EndRound") { StartCoroutine("EndRound", data); }
+        
+
+        if (evId == "CreateCommunityCards" || evId == "CreateCommunityCardsForShowdown") { StartCoroutine(CreateCommunityCards(data)); }
+
+        if (evId == "ShowCardsBestCombination") { ShowCardsBestCombination(data); }
+
+
+        if (evId == "WinMainPotWithoutShowdown")  {  PokerWinManager.ins.WinMainPotWithoutShowdown((bool)data["mainPotFoldout"]); }
+        
+        if (evId == "PrepareForShowDowns") {  PokerWinManager.ins.PrepareForShowDowns(); }
+
+
+        if (evId == "HighlightShowdownPot") { PokerWinManager.ins.HighlightShowdownPot((int)data["potIndex"]); }
+
+        if (evId == "DeclarePotWinners")
         {
-            for (int i = 0; i < seats.Count; i++) { seats[i].roundBet.ResetAmount(); }
+            int[] winningSeats = (int[])data["winningSeats"];
+            string winType = (string)data["winType"];
+            int[] winningCards = (int[])data["winningCards"];
+
+            PokerWinManager.ins.DeclarePotWinners((int)data["potIndex"], winningSeats, winType, winningCards);
         }
+    }
 
-        if (hashtable["moveMade"] != null && (string)hashtable["moveMade"] == "FOLD") { seats[(int)hashtable["moveMadeBy"]].MakePlayerFoldInAllPots(); }
 
-        if (hashtable["moveAmount"] != null) { seats[(int)hashtable["moveMadeBy"]].MakeBet((float)hashtable["moveAmount"]); }
+    IEnumerator EndRound(ExitGames.Client.Photon.Hashtable data)
+    {
+        for (int i = 0; i < seats.Count; i++) { seats[i].DeactivateMoveInfo(); }
 
-        if (hashtable.ContainsKey("endRound"))
-        {
-            for (int i = 0; i < seats.Count; i++) { seats[i].DeactivateMoveInfo(); }
-        }
-
-        if (hashtable.ContainsKey("submitRoundBet"))
+        if (data.ContainsKey("submitRoundBet"))
         {
             for (int i = 0; i < seats.Count; i++) { seats[i].SubmitRoundBet(); }
+            yield return new WaitForSeconds(1);
         }
 
-        if (hashtable.ContainsKey("mainPotAmount"))
-        {
-            mainPot.AddAmount((float)hashtable["mainPotAmount"], (int[])hashtable["mainPotSeats"]); 
-        }
+        if (data.ContainsKey("mainPotAmount")) { mainPot.AddAmount((float)data["mainPotAmount"], (int[])data["mainPotSeats"]); }
 
-        if (hashtable.ContainsKey("sidePotAmount"))
+        if (data.ContainsKey("sidePotsAmount"))
         {
             mainPot.gameObject.SetActive(false);
-            for (int i = 0; i < sidePots.Length; i++)
-            {
-                if (!sidePots[i].gameObject.activeInHierarchy) { sidePots[i].AddAmount((float)hashtable["sidePotAmount"], (int[])hashtable["sidePotSeats"]); break; }
-            }
+            float[] sidePotsAmount = (float[])data["sidePotsAmount"];
+            string[] sidePotsSeats = (string[])data["sidePotsSeats"];
+            for (int i = 0; i < sidePotsAmount.Length; i++) { Pot.GetInActivePot(sidePots).AddAmount(sidePotsAmount[i], sidePotsSeats[i]); }
         }
 
-        if (hashtable.ContainsKey("newCommunityCards"))
-        {
-            Debug.Log("newCommunityCards");
-            bool forShowdown = (bool)hashtable["forShowdown"];
-            int[] newCommunityCards = (int[])hashtable["newCommunityCards"];
-
-            for (int i = 0; i < newCommunityCards.Length; i++)
-            {
-                //Debug.Log(newCommunityCards[i]);
-                Deck.ins.CreateNewCard(newCommunityCards[i], communityCards3D);
-            }
-            if (!forShowdown)
-            {
-                Utils.InvokeDelayedAction(1, () => { communityCards.CopyCards(communityCards3D, true); });
-            }
-            else { PokerWinManager.ins.winInfoPanel.SetActive(false); }
-        }
-
-
-        if (hashtable.ContainsKey("takeMainPotAmount"))  {  PokerWinManager.ins.TakeMainPotAmount((bool)hashtable["mainPotFoldout"]); }
-        if (hashtable.ContainsKey("startShowDowns")) {  PokerWinManager.ins.StartShowDowns(); }
-
-        if (hashtable.ContainsKey("showDownCommunityCards")) { PokerWinManager.ins.winInfoPanel.SetActive(false); }
-
-        if (hashtable.ContainsKey("startShowDown"))
-        {
-            Pot showDownPot = mainPot;
-            int potIndex = (int)hashtable["potIndex"];
-            if (potIndex > -1) { showDownPot = sidePots[potIndex]; }
-            int[] winningSeats = (int[])hashtable["winningSeats"];
-            string winType = (string)hashtable["winType"];
-            int[] winningCards = (int[])hashtable["winningCards"];
-
-            PokerWinManager.ins.StartShowDown(showDownPot, winningSeats, winType, winningCards);
-        }
-
-        if (hashtable.ContainsKey("gameComplete")) { restartBtn.SetActive(true); }
+        yield return new WaitForSeconds(1);
+        ServerClientBridge.ins.NotifyServerIfMasterClient("EndRound");
     }
 
-    public void RestartBtn()
+
+
+    IEnumerator CreateCommunityCards(ExitGames.Client.Photon.Hashtable data)
     {
-        NetworkRoomClient.ins.LeaveGameRoom(() => { UnityEngine.SceneManagement.SceneManager.LoadScene("PokerRoom_2"); });
+        int[] cards = (int[])data["cards"];
+        for (int i = 0; i < cards.Length; i++) { Deck.ins.CreateNewCard(cards[i], communityCards3D); }
+        
+        yield return new WaitForSeconds(1);
+        communityCards.CopyCards(communityCards3D, true);
+        yield return new WaitForSeconds(1);
+        ServerClientBridge.ins.NotifyServerIfMasterClient((string)data["evId"]);
     }
 
-    public void QuitBtn()
+    void ShowCardsBestCombination(ExitGames.Client.Photon.Hashtable data)
     {
-        NetworkRoomClient.ins.LeaveGameRoom(() => { UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby"); });
+        CardGameClient.ins.lpCards.RemoveCardsHighlight();
+        communityCards.RemoveCardsHighlight();
+         
+        int[] cards = (int[])data["cards"];
+        string combinationType = (string)data["combinationType"];
+
+        List<int> cardsList = new List<int>();
+        for (int i = 0; i < cards.Length; i++) { cardsList.Add(cards[i]); }
+
+        List<int> playerCards = CardGameClient.ins.lpCards.GetCardsIndexes();
+        for (int j = 0; j < playerCards.Count; j++)
+        {if (cardsList.Contains(playerCards[j])) { CardGameClient.ins.lpCards.cards[j].HighlightCard(); }}
+
+        List<int> communityCardsIndexes = communityCards.GetCardsIndexes();
+        for (int i = 0; i < communityCardsIndexes.Count; i++)
+        {if (cardsList.Contains(communityCardsIndexes[i])) { communityCards.cards[i].HighlightCard(); }}
+
+        cardsCombinationTypePanel.gameObject.SetActive(true);
+        cardsCombinationTypePanel.GetChild(1).GetComponent<Image>().sprite = PokerWinManager.ins.GetWinTypeSprite(combinationType);
+        cardsCombinationTypePanel.GetChild(1).GetComponent<Image>().SetNativeSize();
     }
 }

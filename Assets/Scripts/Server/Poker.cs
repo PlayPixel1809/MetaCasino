@@ -1,8 +1,10 @@
+using ExitGames.Client.Photon;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Poker : MonoBehaviour
+public partial class Poker : MonoBehaviour
 {
     public static Poker ins;
     void Awake() { ins = this; }
@@ -20,370 +22,124 @@ public class Poker : MonoBehaviour
     public List<int> mainPotSeats;
     public int round;
 
+
     public class PotInfo
     {
         public float potAmount;
         public List<int> showdownEligibleSeats = new List<int>();
         public string showdownEligibleSeatsString;
+        public DataUtils dataUtils = new DataUtils();
     }
 
     void Start()
     {
         ServerClientBridge.ins.onClientMsgRecieved += OnClientMsgRecieved;
+        ServerClientBridge.ins.onMadeMasterClient += RestoreData;
+        
 
         NetworkGame.ins.onGameStart += () =>
         {
             allInPlayers = new bool[NetworkRoom.ins.seats.Length];
             roundActiveSeats = new bool[NetworkRoom.ins.seats.Length];
+            mainPot = 0;
+            mainPotSeats = new List<int>();
+            mainPotFoldout = false;
             sidePotsSeats = new List<string>();
             sidePotsAmount = new List<float>();
             communityCards = new List<int>();
-            NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() {  { "allInPlayers", allInPlayers }, { "sidePotsSeats", sidePotsSeats.ToArray() }, { "sidePotsAmount", sidePotsAmount.ToArray() }, 
-                { "communityCards", communityCards.ToArray() } } );
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable() {  { "allInPlayers", allInPlayers }, { "sidePotsSeats", sidePotsSeats.ToArray() }, { "sidePotsAmount", sidePotsAmount.ToArray() }, 
+                { "communityCards", communityCards.ToArray() }, { "mainPot", mainPot }, { "mainPotSeats", mainPotSeats.ToArray() }, { "mainPotFoldout", mainPotFoldout } } );
 
         };
 
-        CardGame.ins.onCardsDistributed += ()=> { StartRound(1); };
-
-        TurnGame.ins.onTurn += (s) => 
+        TurnGame.ins.onTurnStarted += (i) => 
         {
-            //Debug.Log(playersBetsForRound[s]);
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "getPokerMove", 1 }, { "currentBet", GetHighestBet() }, { "playerBet", playersBetsForRound[s] } });
+            ServerClientBridge.ins.NotifyClients("StartPokerTurn",  new ExitGames.Client.Photon.Hashtable() { { "currentBet", GetHighestBet() }, { "playerBet", playersBetsForRound[i] } });
+        };
+
+        TurnGame.ins.onTurnCompleted += TurnCompleted;
+
+        CardGame.ins.onCardsDistributed += () => { StartRound(1); };
+
+        NetworkGame.ins.onGameComplete += () =>
+        {
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable()
+            {
+                { "playersBetsForRound", null },
+                { "communityCards", null }
+            });
         };
     }
 
-    void OnClientMsgRecieved(int senderActorNo, ExitGames.Client.Photon.Hashtable hashtable)
+    public void StartShowDowns()
     {
-        int senderSeatIndex = NetworkRoom.ins.GetSeatIndex(senderActorNo);
-
-        if (hashtable.ContainsKey("moveMade") && (string)hashtable["moveMade"] == "FOLD")
-        {
-            roundActiveSeats[TurnGame.ins.turn] = false;
-            NetworkGame.ins.SyncData("roundActiveSeats", roundActiveSeats);
-        }
-
-        if (hashtable.ContainsKey("moveMade"))
-        {
-            int moveMadeSeatIndex = TurnGame.ins.turn;
-
-            ExitGames.Client.Photon.Hashtable dataToSync = new ExitGames.Client.Photon.Hashtable();
-            
-            if ((string)hashtable["moveMade"] == "ALL IN")
-            {
-                TurnGame.ins.turnEligiblePlayers[TurnGame.ins.turn] = false;
-                allInPlayers[TurnGame.ins.turn] = true;
-                dataToSync.Add("turnEligiblePlayers", TurnGame.ins.turnEligiblePlayers);
-                dataToSync.Add("allInPlayers", allInPlayers);
-            }
-
-            if (hashtable.ContainsKey("moveAmount"))
-            {
-                float amount = (float)hashtable["moveAmount"];
-
-                NetworkGame.ins.playersBets[TurnGame.ins.turn] += amount;
-                dataToSync.Add("playersBets", NetworkGame.ins.playersBets);
-
-                playersBetsForRound[TurnGame.ins.turn] += amount;
-                dataToSync.Add("playersBetsForRound", playersBetsForRound);
-            }
-
-            NetworkGame.ins.SyncData(dataToSync);
-
-            hashtable.Add("moveMadeBy", TurnGame.ins.turn);
-            ServerClientBridge.NotifyClients(hashtable);
-
-            Utils.InvokeDelayedAction(1, StartNextTurn);
-        }
-    }
-
-
-    public void StartRound(int round)
-    {
-        this.round = round;
-        playersBetsForRound = new float[NetworkRoom.ins.seats.Length];
-        TurnGame.ins.turnRecievedPlayers = new bool[NetworkRoom.ins.seats.Length];
-
-        for (int i = 0; i < roundActiveSeats.Length; i++) { roundActiveSeats[i] = TurnGame.ins.turnEligiblePlayers[i]; }
-
-        NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "round", round }, { "playersBetsForRound", playersBetsForRound }, { "turnRecievedPlayers", TurnGame.ins.turnRecievedPlayers }, 
-            { "roundActiveSeats", roundActiveSeats } });
-
-        if (round == 1) 
-        {
-            int smallBlindIndex = TurnGame.ins.GetNextTurnIndex(TurnGame.ins.dealer);
-            int bigBlindIndex = TurnGame.ins.GetNextTurnIndex(smallBlindIndex);
-
-            NetworkGame.ins.playersBets[smallBlindIndex] = NetworkRoom.ins.minBet;
-            NetworkGame.ins.playersBets[bigBlindIndex] = NetworkRoom.ins.minBet * 2;
-            NetworkGame.ins.SyncData("playersBets", NetworkGame.ins.playersBets);
-
-            playersBetsForRound[smallBlindIndex] = NetworkRoom.ins.minBet;
-            playersBetsForRound[bigBlindIndex] = NetworkRoom.ins.minBet * 2;
-            NetworkGame.ins.SyncData("playersBetsForRound", playersBetsForRound);
-
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "smallBlindSeat", smallBlindIndex }, { "smallBlindAmount", NetworkRoom.ins.minBet } });
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "bigBlindSeat", bigBlindIndex }, { "bigBlindAmount", NetworkRoom.ins.minBet * 2 } });
-
-            TurnGame.ins.StartTurn(TurnGame.ins.GetNextTurnIndex(bigBlindIndex), PlayerDidntRespondedToTurn);
-        }
-        
-        if (round == 2) { CreateCommunityCards(3); }
-        if (round == 3) { CreateCommunityCards(1); }
-        if (round == 4) { CreateCommunityCards(1); }
-        if (round == 5) { StartCoroutine("DeclarePotWinners"); }
-    }
-
-    
-
-    public void StartNextTurn()
-    {
-        //If all players (players that were active or non-allin at the start of the round ) folds then last player should not get turn and should win or enter showdown with allin players of prvious rounds
-        if (GetRoundActiveSeatsCount() < 2) { EndRound(); return; }
-        
-
-        int nextTurnIndex = TurnGame.ins.GetNextTurnIndex(TurnGame.ins.turn); // gets next non-allin and non-folded seat
-        if (nextTurnIndex < 0) { EndRound(); return; }
-
-        if (!TurnGame.ins.turnRecievedPlayers[nextTurnIndex]) { TurnGame.ins.StartTurn(nextTurnIndex, PlayerDidntRespondedToTurn); }
-        else
-        {
-            float nextPlayerBet = playersBetsForRound[nextTurnIndex];
-            if (nextPlayerBet < GetHighestBet()) { TurnGame.ins.StartTurn(nextTurnIndex, PlayerDidntRespondedToTurn); } else { EndRound(); }
-        }
-    }
-
-    public void EndRound() { StartCoroutine("EndRoundCoroutine"); }
-
-    IEnumerator EndRoundCoroutine()
-    {
-        ServerClientBridge.NotifyClients("endRound", 1);
-        Debug.Log("EndRound");
-        if (GetHighestBet() > 0) 
-        {
-            ServerClientBridge.NotifyClients("submitRoundBet", 1);
-            yield return new WaitForSeconds(1);
-        }
-
-        CreateSidePots();
-        CreateMainPot();
-
-        yield return new WaitForSeconds(1);
-
-        //mainpot is not created everytime so mainPotSeats.count cannot be used to detremine whether game should end or procedd to next round 
-        //p1 - 10000, allin, p2 - 10000 allin, p3 - 10000 side pot (p1,p2,p3) 30000 
-        //p1 - 0, allin, p2 - 0 allin, p3 - 0 , mainpot(p2,p3) 0, so as main pot amount is zero so mainpot will not be created
-        if (TurnGame.ins.GetTurnEligiblePlayersCount() > 1)
-        { StartRound(round + 1); }
-        else
-        { StartCoroutine("DeclarePotWinners"); }
-    }
-
-    public void CreateSidePots()
-    {
-        while (true)
-        {
-            int lowestAllInSeat = GetLowestAllInSeat();
-            if (lowestAllInSeat < 0) { break; }
-            float lowestAllInAmount = playersBetsForRound[lowestAllInSeat];
-            
-            int playersContainingLowestAllInAmountCount = 0;
-            for (int i = 0; i < playersBetsForRound.Length; i++)
-            {
-                if (!CardGame.ins.foldedPlayers[i] && playersBetsForRound[i] >= lowestAllInAmount) { playersContainingLowestAllInAmountCount += 1; }
-            }
-            if (playersContainingLowestAllInAmountCount < 2) { break; }
-
-            PotInfo potInfo = CreatePot(playersBetsForRound[lowestAllInSeat]);
-            if (mainPot > 0)
-            {
-                potInfo.potAmount += mainPot;
-                mainPotSeats.Clear();  
-                mainPot = 0;
-                mainPotFoldout = false;
-            }
-            sidePotsAmount.Add(potInfo.potAmount);
-            sidePotsSeats.Add(potInfo.showdownEligibleSeatsString);
-
-            NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "mainPot", mainPot }, { "mainPotFoldout", mainPotFoldout }, { "sidePotsSeats", sidePotsSeats.ToArray() }, { "sidePotsAmount", sidePotsAmount.ToArray() }});
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "sidePotAmount", potInfo.potAmount }, { "sidePotSeats", potInfo.showdownEligibleSeats.ToArray() } });
-        }
-    }
-
-    //All the bets that dosent goes into the side pots goes into the main pot
-    public void CreateMainPot()
-    {
-        float highestBet = GetHighestBet();
-
-        if (highestBet > 0)
-        {
-            PotInfo potInfo = CreatePot(highestBet);
-            mainPot += potInfo.potAmount;
-            mainPotSeats = potInfo.showdownEligibleSeats;
-        }
-        else
-        {
-            List<int> newSeats = new List<int>();
-            for (int i = 0; i < mainPotSeats.Count; i++)
-            {
-                if (!CardGame.ins.IsSeatFolded(mainPotSeats[i])) { newSeats.Add(mainPotSeats[i]); }
-            }
-            mainPotSeats = newSeats; 
-        }
-
-        if (GetRoundActiveSeatsCount() == 1) { mainPotFoldout = true; }
-        if (mainPot > 0) 
-        {
-            NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "mainPotAmount", mainPot }, { "mainPotSeats", mainPotSeats.ToArray() }, { "mainPotFoldout", mainPotFoldout } });
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "mainPotAmount", mainPot }, { "mainPotSeats", mainPotSeats.ToArray() } });
-        }
-    }
-
-    public IEnumerator DeclarePotWinners()
-    {
-        if (mainPotSeats.Count == 1)
-        {
-            ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "takeMainPotAmount", 1 }, { "mainPotFoldout", mainPotFoldout } });
-            if (mainPotFoldout)  { yield return new WaitForSeconds(4); }
-            if (!mainPotFoldout) { yield return new WaitForSeconds(1); }
-        }
-
-        if (mainPotSeats.Count > 1 || sidePotsSeats.Count > 0)
-        { StartCoroutine("StartShowDowns"); }
-        else 
-        { ServerClientBridge.NotifyClients("gameComplete", 1); }
-    }
-
-    
-    IEnumerator StartShowDowns()
-    {
-        if (communityCards.Count < 5)
-        {
-            ServerClientBridge.NotifyClients("showDownCommunityCards", 1);
+        if (communityCards.Count < 5) 
+        { 
             CreateCommunityCards(5 - communityCards.Count, true);
-            yield return new WaitForSeconds(3);
+            return;
         }
-
-        Debug.Log("StartShowDowns");
-        ServerClientBridge.NotifyClients("startShowDowns", 1);
 
         for (int i = 0; i < CardGame.ins.playersCards.Length; i++)
         {
-            if (CardGame.ins.playersCards[i] != "Null" && !CardGame.ins.foldedPlayers[i])
-            { CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(communityCards, CardGame.ins.GetPlayerCards(i)); }
+            if (CardGame.ins.playersCards[i] != "Null" && !CardGame.ins.foldedPlayers[i]) { CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(CardGame.ins.GetPlayerCards(i)); }
         }
-        NetworkGame.ins.SyncData("playersCards", CardGame.ins.playersCards);
+        NetworkRoom.ins.SyncData("playersCards", CardGame.ins.playersCards);
 
-        yield return new WaitForSeconds(2);
-
-        if (mainPotSeats.Count > 1) 
-        {
-            StartShowDown(-1);
-            yield return new WaitForSeconds(6);
-        }
-
-        for (int i = sidePotsAmount.Count - 1; i > -1; i--)
-        {
-            StartShowDown(i);
-            yield return new WaitForSeconds(6);
-        }
-
-        ServerClientBridge.NotifyClients("gameComplete", 1);
+        ServerClientBridge.ins.HireClients("PrepareForShowDowns");
     }
+
     
-    public void StartShowDown(int potIndex)
-    {
-        PokerHands.WinInfo winInfo = null;
-        if (potIndex == -1) 
-        { winInfo = PokerHands.GetWinningSeats(mainPotSeats); } 
-        else 
-        { winInfo = PokerHands.GetWinningSeats(sidePotsSeats[potIndex]);}
 
-        ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "startShowDown", 1 }, { "potIndex", potIndex }, { "winningSeats", winInfo.winners.ToArray() },
-            { "winType", winInfo.winType.ToString() }, { "winningCards", winInfo.winningCards.ToArray() } });
-    }
-
-    public void PlayerDidntRespondedToTurn()
-    {
-        string moveName = "FOLD";
-        if (GetHighestBet() == 0) { moveName = "CHECK"; }
-
-        ServerClientBridge.ins.onClientMsgRecieved(NetworkRoom.ins.seats[TurnGame.ins.turn], new ExitGames.Client.Photon.Hashtable() { { "moveMade", moveName } }   );
-    }
-
+    
     public void CreateCommunityCards(int count, bool forShowdown = false)
     {
         List<int> newCards = CardGame.ins.GetCards(count);
         communityCards.AddRange(newCards);
 
-        NetworkGame.ins.SyncData("communityCards", communityCards.ToArray());
-        ServerClientBridge.NotifyClients(new ExitGames.Client.Photon.Hashtable() { { "newCommunityCards", newCards.ToArray() }, { "forShowdown", forShowdown } });
+        NetworkRoom.ins.SyncData("communityCards", communityCards.ToArray());
 
-        Utils.InvokeDelayedAction(2, () => { if (!forShowdown) { TurnGame.ins.StartFirstTurn(PlayerDidntRespondedToTurn); }});
+        if (!forShowdown) { ServerClientBridge.ins.HireClients("CreateCommunityCards", "cards", newCards.ToArray()); }
+        if (forShowdown)  { ServerClientBridge.ins.HireClients("CreateCommunityCardsForShowdown", "cards", newCards.ToArray()); }
     }
 
-    /// <summary>
-    /// if a seat becomes folded it will be considered in-active <br/>
-    /// if a seat becomes all-in in previous rounds it will be considered in-active <br/>
-    /// if a seat becomes all-in in the middle of the present round it will be considered active
-    /// </summary>
-    public float GetRoundActiveSeatsCount()
-    {
-        int count = 0;
-        for (int i = 0; i < roundActiveSeats.Length; i++)
-        {
-            if (roundActiveSeats[i]) { count += 1; }
-        }
-        return count;
-    }
 
-    public float GetHighestBet()
+    public void CreateCardsBestCombination()
     {
-        float highestBet = playersBetsForRound[0];
-        for (int i = 1; i < playersBetsForRound.Length; i++)
+        for (int i = 0; i < NetworkRoom.ins.seats.Length; i++)
         {
-            if (playersBetsForRound[i] > highestBet) { highestBet = playersBetsForRound[i]; }
-        }
-        return highestBet;
-    }
-
-    public int GetLowestAllInSeat()
-    {
-        int lowestAllInSeat = -1;
-        for (int i = 0; i < playersBetsForRound.Length; i++)
-        {
-            if (playersBetsForRound[i] > 0 && allInPlayers[i]) 
+            if (NetworkRoom.ins.seats[i] > 0)
             {
-                if (lowestAllInSeat < 0) { lowestAllInSeat = i; } 
-                else 
+                string combinationType = string.Empty;
+                string cards = PokerHands.GetBestFiveCardsCombination(CardGame.ins.GetPlayerCards(i),out combinationType);
+                Debug.Log(cards);
+
+                string[] cardsStringArray = cards.Split(new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                int[] cardsIntArray = new int[cardsStringArray.Length];
+                for (int j = 0; j < cardsStringArray.Length; j++) { cardsIntArray[j] = int.Parse(cardsStringArray[j]); }
+
+                ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable()
                 {
-                    if (playersBetsForRound[i] < playersBetsForRound[lowestAllInSeat]) { lowestAllInSeat = i; }
-                }
+                    { "cards", cardsIntArray },
+                    { "combinationType", combinationType }
+                };
+
+                ServerClientBridge.ins.NotifyClient(NetworkRoom.ins.seats[i], "ShowCardsBestCombination", data);
             }
         }
-        return lowestAllInSeat;
     }
-    
-    public PotInfo CreatePot(float amountToTake)
-    {
-        PotInfo potInfo = new PotInfo();
-        for (int i = 0; i < playersBetsForRound.Length; i++)
-        {
-            if (playersBetsForRound[i] == 0) { continue; }
-            float amountToAdd = amountToTake;
-            if (playersBetsForRound[i] < amountToTake) { amountToAdd = playersBetsForRound[i]; }
 
-            playersBetsForRound[i] -= amountToAdd;
-            potInfo.potAmount += amountToAdd;
 
-            if (!CardGame.ins.foldedPlayers[i]) 
-            {
-                potInfo.showdownEligibleSeats.Add(i);
-                potInfo.showdownEligibleSeatsString += i + ","; 
-            }
-        }
-        return potInfo;
-    }
-    
+
+
+
+
+
+
+
+
+
+
+
 
 }
 

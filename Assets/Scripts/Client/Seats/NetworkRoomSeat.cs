@@ -22,6 +22,11 @@ public class NetworkRoomSeat : MonoBehaviour
     [HideInInspector]
     public int seatIndex;
 
+    private void Update()
+    {
+        if (!gameObject.activeInHierarchy) { Debug.Log("GotDeactivated"); }
+    }
+
     public void OccupySeat(int actorNo)
     {
         this.actorNo = actorNo;
@@ -50,8 +55,12 @@ public class NetworkRoomSeat : MonoBehaviour
    
     public void VaccateSeat()
     {
-        this.actorNo = 0;
-        player = null;
+        if (player.IsLocal) 
+        {
+            if (HoldemTable.ins != null) { HoldemTable.ins.Back(); }
+            if (OmahaTable.ins != null) { OmahaTable.ins.Back(); }
+        }
+        actorNo = 0;
 
         player = null;
         character.gameObject.SetActive(false);

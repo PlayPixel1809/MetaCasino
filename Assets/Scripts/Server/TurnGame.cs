@@ -17,17 +17,21 @@ public class TurnGame : MonoBehaviour
     public int dealer = -1;
     public bool[] turnEligiblePlayers;
     public bool[] turnRecievedPlayers;
+    public string[] playersMoves;
 
     public Action<int> onDealerSet;
-    public Action<int> onTurn;
+    public Action<int> onTurnStarted;
+    public Action<ExitGames.Client.Photon.Hashtable> onTurnCompleted;
 
-    private Coroutine waitForTurnCoroutine;
 
     void Start()
     {
-        ServerClientBridge.ins.onClientMsgRecieved += OnClientMsgRecieved;
-
         dealer = -1;
+
+        NetworkRoom.ins.onSeatAssigned += (seatIndex, actorNo) =>
+        {
+            if (actorNo > 0) { ServerClientBridge.ins.NotifyClient(actorNo, "SetTurnGameData", new ExitGames.Client.Photon.Hashtable() { { "turnTime", turnTime } }); }
+        };
 
         NetworkGame.ins.onGameStart += () =>
         {
@@ -37,55 +41,63 @@ public class TurnGame : MonoBehaviour
             turnRecievedPlayers = new bool[NetworkRoom.ins.seats.Length];
             dealer = GetNextTurnIndex(dealer);
 
-            NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", turnEligiblePlayers }, { "turnRecievedPlayers", turnRecievedPlayers }, { "dealer", dealer } });
+            playersMoves = new string[NetworkRoom.ins.seats.Length];
+            for (int i = 0; i < NetworkRoom.ins.seats.Length; i++) { playersMoves[i] = "Null"; }
+
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turnEligiblePlayers", turnEligiblePlayers }, { "turnRecievedPlayers", turnRecievedPlayers }, { "dealer", dealer }, { "playersMoves", playersMoves } });
             onDealerSet?.Invoke(dealer);
+        };
+
+        ServerClientBridge.ins.onClientMsgRecieved += OnClientMsgRecieved;
+
+        ServerClientBridge.ins.onMadeMasterClient += () =>
+        {
+            if (ph.GetRoomData("turn") != null)                 { turn = (int)ph.GetRoomData("turn"); }
+            if (ph.GetRoomData("dealer") != null)               { dealer = (int)ph.GetRoomData("dealer"); }
+            if (ph.GetRoomData("turnEligiblePlayers") != null)  { turnEligiblePlayers = (bool[])ph.GetRoomData("turnEligiblePlayers"); }
+            if (ph.GetRoomData("turnRecievedPlayers") != null)  { turnRecievedPlayers = (bool[])ph.GetRoomData("turnRecievedPlayers"); }
+            if (ph.GetRoomData("playersMoves") != null)         { playersMoves = (string[])ph.GetRoomData("playersMoves"); }
+        };
+
+        NetworkGame.ins.onSeatVaccated += (seatIndex, actorNo) =>
+        {
+            turnEligiblePlayers[seatIndex] = false;
+            NetworkRoom.ins.SyncData("turnEligiblePlayers", turnEligiblePlayers);
+        };
+
+        NetworkGame.ins.onGameComplete += () =>
+        {
+            NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable()
+            {
+                { "playersMoves", null }
+            });
         };
     }
 
     
-    void OnClientMsgRecieved(int sender, ExitGames.Client.Photon.Hashtable hashtable)
+    void OnClientMsgRecieved(string completedEvId, ExitGames.Client.Photon.Hashtable data)
     {
-        if (hashtable.ContainsKey("moveMade"))
+        if (completedEvId.IndexOf("ExecuteTurn") > -1)
         {
-            StopCoroutine(waitForTurnCoroutine);
+            onTurnCompleted?.Invoke(data);
         }
 
     }
 
-    public void StartFirstTurn(Action onPlayerDidntRespond)
+    public void StartFirstTurn()
     {
-        StartTurn(GetNextTurnIndex(dealer), onPlayerDidntRespond);
+        StartTurn(GetNextTurnIndex(dealer));
     }
 
 
-    public void StartTurn(int turnIndex, Action onPlayerDidntRespond)
+    public void StartTurn(int turnIndex)
     {
         turn = turnIndex;
         turnRecievedPlayers[turn] = true;
-        NetworkGame.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turn", turn }, { "turnRecievedPlayers", turnRecievedPlayers } });
-        ServerClientBridge.NotifyClients("turn", turn);
-        onTurn?.Invoke(turn);
-        waitForTurnCoroutine = StartCoroutine(WaitForTurnResponse( onPlayerDidntRespond));
+        NetworkRoom.ins.SyncData(new ExitGames.Client.Photon.Hashtable() { { "turn", turn }, { "turnRecievedPlayers", turnRecievedPlayers } });
+        ServerClientBridge.ins.HireClients("ExecuteTurn" + turn, "turnIndex", turn);
+        onTurnStarted?.Invoke(turn);
     }
-
-    public IEnumerator WaitForTurnResponse(Action onPlayerDidntRespond)
-    {
-        yield return new WaitForSeconds(turnTime); 
-        onPlayerDidntRespond?.Invoke();
-    }
-
-    public void RestartGame()
-    {
-        /*tableChips.SetActive(false);
-        tablePot.gameObject.SetActive(false);
-
-        playersBets = new float[turnGameSeats.Count];
-        ph.SetRoomData("playersBets", playersBets);
-
-        turnRecievedPlayers = new bool[turnGameSeats.Count];
-        ph.SetRoomData("turnRecievedPlayers", turnRecievedPlayers);*/
-    }
-
     
     public int GetNextTurnIndex(int currentTurnIndex)
     {

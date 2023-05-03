@@ -19,9 +19,19 @@ public class PokerSeat : MonoBehaviour
         networkGameSeat = GetComponent<NetworkGameSeat>();
         turnGameSeat = GetComponent<TurnGameSeat>();
         cardGameSeat = GetComponent<CardGameSeat>();
+
+        networkRoomSeat.onSeatOccupied += () =>
+        {
+            roundBet.Reset();
+        };
+
+        networkRoomSeat.onSeatVaccated += () =>
+        {
+            roundBet.Reset();
+        };
     }
 
-    public void GetPokerMove(float currentBet, float playerBet)
+    public void StartTurn(float currentBet, float playerBet)
     {
         float balance = (float)ph.GetPlayerData(networkRoomSeat.player, "balance");
 
@@ -30,9 +40,13 @@ public class PokerSeat : MonoBehaviour
             if (networkRoomSeat.player.IsLocal) { PokerClient.ins.lpControls.ActivateControls(currentBet, playerBet, balance); }
         }
 
-        if (networkRoomSeat.actorNo < 0)
+        if (networkRoomSeat.actorNo < 0 && ph.IsMasterClient())
         {
-            if (ph.IsMasterClient()) { CreateMoveForBot(currentBet, playerBet, balance); }
+            if (BotManager.ins.playForBots) { PokerClient.ins.lpControls.ActivateControls(currentBet, playerBet, balance); }
+            else
+            { 
+                CreateMoveForBot(currentBet, playerBet, balance); 
+            }
         }
     }
 
@@ -90,7 +104,7 @@ public class PokerSeat : MonoBehaviour
             float moveAmount = 0;
 
             if (rand < 2) { moveName = "FOLD"; }
-            if (rand > 0 && rand < 7)
+            if (rand > 1 && rand < 7)
             {
                 if (playerBet == currentBet) { moveName = "CHECK"; }
                 if (playerBet < currentBet) { moveName = "CALL"; moveAmount = currentBet - playerBet; }
@@ -107,7 +121,7 @@ public class PokerSeat : MonoBehaviour
             ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable();
             data.Add("moveMade", moveName);
             if (moveAmount > 0) { data.Add("moveAmount", moveAmount); }
-            ServerClientBridge.NotifyServer(data);
+            ServerClientBridge.ins.NotifyServer("ExecuteTurn" + TurnGameClient.ins.turn, data);
         });
         
     }
