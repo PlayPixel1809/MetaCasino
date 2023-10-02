@@ -76,6 +76,7 @@ public class NetworkGameClient : MonoBehaviour
 
     IEnumerator GameComplete()
     {
+        for (int i = 0; i < seats.Count; i++) { seats[i].winAmount = 0; }
         onGameComplete?.Invoke();
         yield return new WaitForSeconds(2);
         ServerClientBridge.ins.NotifyServerIfMasterClient("GameComplete");
@@ -91,3 +92,5 @@ public class NetworkGameClient : MonoBehaviour
         KeyValue.AddValueToList("minBalance", KeyValue.ValueTypes.Float, minBalance, NetworkRoomClient.ins.expectedCustomRoomProperties);
     }
 }
+
+

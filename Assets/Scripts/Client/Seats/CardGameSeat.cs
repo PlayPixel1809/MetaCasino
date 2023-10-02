@@ -11,7 +11,7 @@ public class CardGameSeat : MonoBehaviour
     public CardsHolder cards3D;
 
     [Header("Assigned During Game -")]
-    public string[] cardsIndexes;
+    public string[] cardsIndexes = new string[0];
 
 
     [HideInInspector] public NetworkRoomSeat networkRoomSeat;
@@ -46,5 +46,12 @@ public class CardGameSeat : MonoBehaviour
             if (animateCards) { yield return new WaitForSeconds(1); }
         }
         if (networkRoomSeat.player.IsLocal) { CardGameClient.ins.lpCards.CopyCards(cards3D, true); }
+    }
+
+    public void RemoveCards() 
+    {
+        cardsIndexes = new string[0];
+        cards3D.RemoveCards();
+        cards.RemoveCards();
     }
 }

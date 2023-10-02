@@ -67,6 +67,7 @@ public class PokerClient : MonoBehaviour
             for (int i = 0; i < sidePots.Length; i++) { sidePots[i].Reset(); }
             tableCommunityCards.RemoveCards();
             communityCards.RemoveCards();
+            communityCards3D.RemoveCards();
             CardGameClient.ins.lpCards.RemoveCards();
             PokerWinManager.ins.winInfoPanel.SetActive(false);
             cardsCombinationTypePanel.gameObject.SetActive(false);

@@ -62,7 +62,7 @@ public class CardsHolder : MonoBehaviour
     {
         for (int i = 0; i < cardsParent.childCount; i++)
         {
-            if (!cardsParent.GetChild(i).gameObject.activeInHierarchy)
+            if (!cardsParent.GetChild(i).gameObject.activeSelf)
             {
                 Card inActiveCard = cardsParent.GetChild(i).GetChild(0).GetComponent<Card>();
                 cardsParent.GetChild(i).gameObject.SetActive(true);

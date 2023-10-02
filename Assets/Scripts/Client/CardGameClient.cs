@@ -41,7 +41,7 @@ public class CardGameClient : MonoBehaviour
 
         NetworkGameClient.ins.onGameComplete += () =>
         {
-            for (int i = 0; i < seats.Count; i++) { seats[i].cards.RemoveCards(); }
+            for (int i = 0; i < seats.Count; i++) { seats[i].RemoveCards(); }
             Deck.ins.Reset();
         };
     }

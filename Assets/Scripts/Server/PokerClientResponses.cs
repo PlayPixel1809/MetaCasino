@@ -29,7 +29,7 @@ public partial class  Poker : MonoBehaviour
 
         if (completedEvId == "WinMainPotWithoutShowdown")
         {
-            if (sidePotsSeats.Count > 0) { StartCoroutine("StartShowDowns"); } else { NetworkGame.ins.GameComplete(); }
+            if (sidePotsSeats.Count > 0) { StartCoroutine("StartShowDowns"); } else { CreateReplay(); }
         }
 
         if (completedEvId == "CreateCommunityCards") { CreateCardsBestCombination(); TurnGame.ins.StartFirstTurn(); }
@@ -57,16 +57,18 @@ public partial class  Poker : MonoBehaviour
                 if (sidePotsAmount.Count > 0)
                 { ServerClientBridge.ins.HireClients("HighlightShowdownPot", "potIndex", sidePotsAmount.Count - 1); }
                 else
-                { NetworkGame.ins.GameComplete(); }
+                { CreateReplay(); }
             }
             else
             {
                 if (potIndex > 0) 
                 { ServerClientBridge.ins.HireClients("HighlightShowdownPot", "potIndex", potIndex - 1); } 
                 else 
-                { NetworkGame.ins.GameComplete(); }
+                { CreateReplay(); }
             }
         }
+
+        if (completedEvId == "CreateReplay") { NetworkGame.ins.GameComplete(); }
     }
 
     void TurnCompleted(ExitGames.Client.Photon.Hashtable data)

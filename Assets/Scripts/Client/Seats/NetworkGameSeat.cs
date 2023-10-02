@@ -10,6 +10,8 @@ public class NetworkGameSeat : MonoBehaviour
 
     [HideInInspector] public NetworkRoomSeat networkRoomSeat;
 
+    public float winAmount = 0;
+
     void Start()
     {
         networkRoomSeat = GetComponent<NetworkRoomSeat>();
@@ -33,6 +35,8 @@ public class NetworkGameSeat : MonoBehaviour
 
     public void ChangeBalance(float amount)
     {
+        winAmount += amount;
+
         playerBalance.AddAmount(amount);
 
         if (networkRoomSeat.actorNo > 0)

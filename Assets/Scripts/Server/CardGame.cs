@@ -21,8 +21,8 @@ public class CardGame : MonoBehaviour
     public bool[] foldedPlayers;
     public List<int> deck;
     public string[] playersCards;
+    public string[] playersCardsCombinationType;
 
-    
 
     void Start()
     {

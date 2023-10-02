@@ -79,11 +79,16 @@ public partial class Poker : MonoBehaviour
             return;
         }
 
+        CardGame.ins.playersCardsCombinationType = new string[CardGame.ins.playersCards.Length];
+        for(int i = 0; i < CardGame.ins.playersCardsCombinationType.Length; i++) { CardGame.ins.playersCardsCombinationType[i] = "Null"; }
+
         for (int i = 0; i < CardGame.ins.playersCards.Length; i++)
         {
-            if (CardGame.ins.playersCards[i] != "Null" && !CardGame.ins.foldedPlayers[i]) { CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(CardGame.ins.GetPlayerCards(i)); }
+            if (CardGame.ins.playersCards[i] != "Null" && !CardGame.ins.foldedPlayers[i]) 
+            { CardGame.ins.playersCards[i] = PokerHands.GetBestFiveCardsCombination(CardGame.ins.GetPlayerCards(i),out CardGame.ins.playersCardsCombinationType[i]); }
         }
         NetworkRoom.ins.SyncData("playersCards", CardGame.ins.playersCards);
+        NetworkRoom.ins.SyncData("playersCardsCombinationType", CardGame.ins.playersCardsCombinationType);
 
         ServerClientBridge.ins.HireClients("PrepareForShowDowns");
     }
@@ -111,7 +116,6 @@ public partial class Poker : MonoBehaviour
             {
                 string combinationType = string.Empty;
                 string cards = PokerHands.GetBestFiveCardsCombination(CardGame.ins.GetPlayerCards(i),out combinationType);
-                Debug.Log(cards);
 
                 string[] cardsStringArray = cards.Split(new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries);
                 int[] cardsIntArray = new int[cardsStringArray.Length];
@@ -127,6 +131,20 @@ public partial class Poker : MonoBehaviour
             }
         }
     }
+
+
+
+    public void CreateReplay()
+    {
+        ExitGames.Client.Photon.Hashtable data = new ExitGames.Client.Photon.Hashtable()
+        {
+            { "playersBestFiveCards", CardGame.ins.playersCards },
+            { "playersCardsCombinationType", CardGame.ins.playersCardsCombinationType }
+        };
+
+        ServerClientBridge.ins.HireClients("CreateReplay", data);
+    }
+
 
 
 

@@ -63,9 +63,6 @@ public class PokerWinManager : MonoBehaviour
     {
         winInfoPanel.SetActive(false);
         PokerClient.ins.tableCommunityCards.CopyCards(PokerClient.ins.communityCards3D, true);
-        //PokerClient.ins.communityCards.RemoveCards();
-        PokerClient.ins.communityCards3D.RemoveCards();
-        //CardGameClient.ins.lpCards.RemoveCards();
 
         showDownSeats = new List<CardGameSeat>();
         for (int i = 0; i < CardGameClient.ins.seats.Count; i++)
@@ -75,7 +72,6 @@ public class PokerWinManager : MonoBehaviour
                 TurnGameClient.ins.seats[i].ResetMoveMade();
 
                 CardGameClient.ins.seats[i].cards.CopyCards(CardGameClient.ins.seats[i].cards3D);
-                CardGameClient.ins.seats[i].cards3D.RemoveCards();
                 PokerClient.ins.seats[i].roundBet.Reset();
 
                 showDownSeats.Add(CardGameClient.ins.seats[i]);
