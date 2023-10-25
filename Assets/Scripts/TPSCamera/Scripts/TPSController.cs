@@ -18,6 +18,7 @@ public class TPSController : MonoBehaviour
     private bool joystickActive;
 
     public Animation anims;
+    public Animator animator;
     public Transform lookAtHelper;
 
     public AudioSource audioSource;
@@ -51,6 +52,7 @@ public class TPSController : MonoBehaviour
         if (isIdle) { return; }
         isIdle = true;
         anims.CrossFade("Idle", .1f);
+        animator.Play("Idle");
         audioSource.Stop();
         onCharacterIdle?.Invoke();
     }
@@ -59,6 +61,7 @@ public class TPSController : MonoBehaviour
     {
         Move(dir * walkSpeed);
         anims.CrossFade("Walk", .1f);
+        animator.Play("Walk");
         audioSource.Stop();
     }
 
@@ -66,6 +69,7 @@ public class TPSController : MonoBehaviour
     {
         Move(dir * runSpeed);
         anims.CrossFade("Run", .1f);
+        animator.Play("Run");
         audioSource.clip = run;
         if (!audioSource.isPlaying) { audioSource.Play(); }
     }
@@ -83,6 +87,7 @@ public class TPSController : MonoBehaviour
 
         lookAtHelper.localPosition = new Vector3(amount.z, 0, -amount.x);
         anims.transform.LookAt(lookAtHelper);
+        animator.transform.LookAt(lookAtHelper);
         onMove?.Invoke();
     }
 

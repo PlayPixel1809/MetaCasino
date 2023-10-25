@@ -23,11 +23,9 @@ public class NetworkExplorer : MonoBehaviourPunCallbacks
         playerInfo.gameObject.SetActive(true);
     }
 
-    
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
         if (targetPlayer.ActorNumber != actorNo) { return; }
-
 
         //Debug.Log(targetPlayer.CustomProperties["anim"]);
         string animName = (string)targetPlayer.CustomProperties["anim"];

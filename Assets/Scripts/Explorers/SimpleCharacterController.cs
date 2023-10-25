@@ -11,6 +11,7 @@ public class SimpleCharacterController : MonoBehaviour
     public float runSpeed = 5f;
 
     public Animation character;
+    public Animator characterAnimator;
     public AudioSource audioSource;
     public AudioClip run;
 
@@ -37,6 +38,7 @@ public class SimpleCharacterController : MonoBehaviour
         moveSpeed = 2;
         audioSource.Stop();
         character.CrossFade("Walk", .1f);
+        characterAnimator.CrossFade("Walk", .1f);
         StopCoroutine("PlayIdleWhenCharacterReachesTarget");
         StartCoroutine("PlayIdleWhenCharacterReachesTarget");
     }
@@ -48,6 +50,7 @@ public class SimpleCharacterController : MonoBehaviour
         audioSource.clip = run;
         audioSource.Play();
         character.CrossFade("Run", .1f);
+        characterAnimator.CrossFade("Run", .1f);
         StopCoroutine("PlayIdleWhenCharacterReachesTarget");
         StartCoroutine("PlayIdleWhenCharacterReachesTarget");
     }
@@ -57,6 +60,7 @@ public class SimpleCharacterController : MonoBehaviour
         while (Vector3.Distance(transform.position, target) > 0) { yield return null; }
         yield return new WaitForSeconds(.25f);
         character.CrossFade("Idle", .1f);
+        characterAnimator.CrossFade("Idle", .1f);
         audioSource.Stop();
     }
 

@@ -19,6 +19,8 @@ public partial class User : MonoBehaviour
     public string playfabId;
     public string username = "DemoUser";
     public float balance = 100000;
+    public string readyPlayerMeAvatarUrl;
+    public GameObject readyPlayerMeAvatar;
 
     [HideInInspector] public int roomIndex;
     public DateTime currentTime;
@@ -28,7 +30,7 @@ public partial class User : MonoBehaviour
 
    
     
-    public static void LoginAndCreateLocalUser(string playFabEmail, string password)
+    public static void LoginAndCreateLocalUser(string playFabEmail, string password, Action<LoginResult> onSuccess = null, Action<PlayFabError> onFailed = null)
     {
         NoticeUtils.ins.ShowLoadingAlert("Login user");
 
@@ -38,13 +40,15 @@ public partial class User : MonoBehaviour
         res =>
         {
             NoticeUtils.ins.HideLoadingAlert();
+            onSuccess?.Invoke(res);
             CreateUser(res);
         },
         err =>
         {
             Debug.Log("Error: " + (err.ErrorMessage));
             NoticeUtils.ins.HideLoadingAlert();
-            NoticeUtils.ins.ShowOneBtnAlert((err.ErrorMessage));
+            //NoticeUtils.ins.ShowOneBtnAlert((err.ErrorMessage));
+            onFailed?.Invoke(err);
         });
     }
 
