@@ -14,7 +14,10 @@ public class PlayerInfoUi : MonoBehaviour
 
     void Start()
     {
-        if (PlayerPrefs.GetInt("mute", 0) == 0) { UnmuteBtn(); } else { MuteBtn(); }
+        if (muteBtn != null && unmuteBtn != null) 
+        { 
+            if (PlayerPrefs.GetInt("mute", 0) == 0) { UnmuteBtn(); } else { MuteBtn(); }
+        }
     }
 
 

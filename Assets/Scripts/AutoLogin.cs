@@ -9,20 +9,27 @@ using UnityEngine.Networking;
 
 public class AutoLogin : MonoBehaviour
 {
-    [SerializeField]
-    [Tooltip("Set this to the URL or shortcode of the Ready Player Me Avatar you want to load.")]
-    private string avatarUrl = "https://api.readyplayer.me/v1/avatars/638df693d72bffc6fa17943c.glb";
+    
 
     [Space(30)]
     public ResponseInfo getTokenResponse;
     public ResponseInfo validateTokenResponse;
-    
-    
-    private GameObject avatar;
 
+    //localhost:54380/?email=digitalmetahuman@gmail.com&password=testpass123
     void Start()
     {
-        StartCoroutine(GetToken("digitalmetahuman@gmail.com", "testpass123", (text)=>
+        string email = "digitalmetahuman@gmail.com";
+        string password = "testpass123";
+
+        if (Application.platform == RuntimePlatform.WebGLPlayer) 
+        {
+            email = JsMethods.GetEmailFromUrl();
+            password = JsMethods.GetPasswordFromUrl();
+        }
+        
+        
+        
+        StartCoroutine(GetToken(email, password, (text)=>
         {
             Debug.Log(text);
             getTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
@@ -46,7 +53,7 @@ public class AutoLogin : MonoBehaviour
         www.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         www.SetRequestHeader("Cookie", "PHPSESSID=8e86e28cc0999fecc90aa7dcac0cb3e4");
 
-        NoticeUtils.ins.ShowLoadingAlert("Geting Token");
+        NoticeUtils.ins.ShowLoadingAlert("Geting Token, email: " + username);
         yield return www.SendWebRequest();
         if (www.result == UnityWebRequest.Result.ConnectionError) { NoticeUtils.ins.ShowOneBtnAlert(www.error); } else { onSuccess?.Invoke(www.downloadHandler.text); }
     }
@@ -72,12 +79,12 @@ public class AutoLogin : MonoBehaviour
         {
             User.onCreateLocalUser = null;
             User.localUser.readyPlayerMeAvatarUrl = validateTokenResponse.data.user.avatar;
-            User.localUser.username = getTokenResponse.data.firstName;
+            //User.localUser.username = getTokenResponse.data.firstName;
 
             LoadPlayerMeAvatar(validateTokenResponse.data.user.avatar);
         };
 
-        User.LoginAndCreateLocalUser(email, "12345678", null, 
+        User.LoginAndCreateLocalUser(email, "12345678", (loginResult)=>{ loginResult.InfoResultPayload.AccountInfo.TitleInfo.DisplayName = getTokenResponse.data.firstName; }, 
         (error)=> 
         {
             RegisterByEmail(email, (playFabId) => { LoginWithEmail(email); });
@@ -127,7 +134,7 @@ public class AutoLogin : MonoBehaviour
             User.localUser.readyPlayerMeAvatar.SetActive(false);
 
             NoticeUtils.ins.ShowLoadingAlert("Loading Casino");
-            Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("City"); });
+            Utils.InvokeDelayedAction(0, () => { UnityEngine.SceneManagement.SceneManager.LoadScene("Casino"); });
         };
         avatarLoader.LoadAvatar(avatarUrl);
     }

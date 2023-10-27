@@ -5,7 +5,6 @@ using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
-using Newtonsoft.Json;
 
 
 public partial class User : MonoBehaviour

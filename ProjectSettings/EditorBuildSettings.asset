@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/AutoLogin.unity
     guid: 63d8f2d23aac2b246baa03da61cfa531
   - enabled: 0
@@ -14,27 +14,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/City.unity
     guid: 56bae533588ab7944a98071fe8048518
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Casino.unity
     guid: 22f076953f48de3498bb87b79c297d6e
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/HoldemTable.unity
     guid: 2877c98efb80e8a408e7b7207c5a1f7d
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/OmahaTable.unity
     guid: e0ef3e6395f661d44b2677ef3b7616ae
-  - enabled: 1
+  - enabled: 0
     path: Assets/Temp/Temp.unity
     guid: 8f0da9c4cdfc8d3499e3a9945e9653a8
-  - enabled: 0
-    path: Assets/Samples/Ready Player Me Core/3.2.4/QuickStart/QuickStart.unity
-    guid: 82ffac477ce64fd46a57d2d423d0a5f6
-  - enabled: 0
-    path: Assets/Samples/Ready Player Me Core/3.2.4/AvatarLod/AvatarLodExample.unity
-    guid: 70100edf1a7db4b519c15b52da0e13f2
-  - enabled: 0
-    path: Assets/Scenes/WebGLExample.unity
-    guid: 9d92a678c5a8b1241b68e511a70aacc8
   m_configObjects:
-    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 20b565617943cd84a805296c0f2d93c2, type: 2}
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c7953d058c6c3034aae76bffb2be8266, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: ab0be907bcf3d3943aa1e78f4b77e464, type: 2}

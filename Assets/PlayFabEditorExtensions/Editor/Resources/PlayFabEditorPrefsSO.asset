@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d0199c11aa6f514784c5c69cd8378d8, type: 3}
   m_Name: PlayFabEditorPrefsSO
   m_EditorClassIdentifier: 
-  DevAccountEmail: playpixelinteractive1809@outlook.com
-  DevAccountToken: 8r5jmnh7htm9zom9834qynupk3hrtaawpiduxuybpunot1nd5yxckbwg7igu8uwdgxxr837y3woghm7ow7frzxr1jnadxt6ymid8sjqm1jjxoa1ey7tx7m35hswnwmrtm5zax9f49urw9kc9czze9j7rmmmt1k51rjuyzctbzefxhg33ij7s5ry7yswymtqw38ijn8mj
-  SelectedStudio: MetaCasinoStudio
-  SdkPath: Assets/PlayFabSDK
+  DevAccountEmail: 
+  DevAccountToken: 
+  SelectedStudio: 
+  SdkPath: 
   EdExPath: 
   LocalCloudScriptPath: 
   PanelIsShown: 0

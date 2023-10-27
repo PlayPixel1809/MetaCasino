@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using PlayFab;
 using PlayFab.ClientModels;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using System;
 using System.Globalization;
 

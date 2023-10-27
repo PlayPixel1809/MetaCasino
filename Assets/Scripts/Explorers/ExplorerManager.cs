@@ -25,8 +25,6 @@ public class ExplorerManager : MonoBehaviour
             { "pos", localCharacter.transform.position}
         };
         if (!string.IsNullOrEmpty(User.localUser.readyPlayerMeAvatarUrl)) { changedProp.Add("readyPlayerMeAvatarUrl", User.localUser.readyPlayerMeAvatarUrl); }
-        if (!Application.isEditor) { changedProp.Add("readyPlayerMeAvatarUrl", "https://models.readyplayer.me/649c0c1ea78d60625aa071a8.glb"); }
-
         PhotonNetwork.LocalPlayer.SetCustomProperties(changedProp);
 
         if (User.localUser.readyPlayerMeAvatar != null) 
@@ -37,6 +35,7 @@ public class ExplorerManager : MonoBehaviour
             localCharacter.anims.gameObject.SetActive(false);
             avatar.GetComponent<Animator>().runtimeAnimatorController = localCharacter.animator.runtimeAnimatorController;
             localCharacter.animator = avatar.GetComponent<Animator>();
+            localCharacter.animator.Play("Idle");
         }
 
         Room.ins.onRoomJoined += SpawnExplorers;
@@ -107,9 +106,9 @@ public class ExplorerManager : MonoBehaviour
                 networkExplorer.character.character.gameObject.SetActive(false);
                 avatar.GetComponent<Animator>().runtimeAnimatorController = networkExplorer.character.characterAnimator.runtimeAnimatorController;
                 networkExplorer.character.characterAnimator = avatar.GetComponent<Animator>();
+                networkExplorer.character.characterAnimator.Play("Idle");
             };
             avatarLoader.LoadAvatar((string)player.CustomProperties["readyPlayerMeAvatarUrl"]);
-            //if (Application.isEditor) { avatarLoader.LoadAvatar((string)player.CustomProperties["readyPlayerMeAvatarUrl"]); }
         }
     }
 }

@@ -1,4 +1,5 @@
 using Photon.Realtime;
+using ReadyPlayerMe.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +8,8 @@ using UnityEngine;
 public class NetworkRoomSeat : MonoBehaviour
 {
     public uiLabel playerName;
-    public Animation character;
+    public Animation characterAnimation;
+    public Animator characterAnimator;
     public Transform cameraPos;
 
     [Header("Assigned During Game -")]
@@ -33,6 +35,7 @@ public class NetworkRoomSeat : MonoBehaviour
         seatIndex = GetSeatIndex();
         player = ph.GetPlayer(actorNo);
         //moveAndBetInfo.Reset();
+        
         if (player.IsLocal)
         {
             name = "LocalPlayer";
@@ -44,8 +47,29 @@ public class NetworkRoomSeat : MonoBehaviour
         }
         else
         {
-            character.gameObject.SetActive(true);
-            character["SitIdle"].time = UnityEngine.Random.Range(0, character["SitIdle"].length);
+            if (player.CustomProperties["readyPlayerMeAvatarUrl"] == null)
+            {
+                characterAnimation.gameObject.SetActive(true);
+                characterAnimation["SitIdle"].time = UnityEngine.Random.Range(0, characterAnimation["SitIdle"].length);
+            }
+            else 
+            {
+                var avatarLoader = new AvatarObjectLoader();
+                avatarLoader.OnCompleted += (_, args) =>
+                {
+                    GameObject avatar = new GameObject();
+                    avatar = args.Avatar;
+                    AvatarAnimatorHelper.SetupAnimator(args.Metadata.BodyType, avatar);
+                    avatar.GetComponent<Animator>().applyRootMotion = false;
+                    avatar.transform.parent = transform;
+                    avatar.transform.localPosition = new Vector3(0,.08f,.04f);
+                    avatar.transform.localEulerAngles = Vector3.zero;
+                    avatar.GetComponent<Animator>().runtimeAnimatorController = characterAnimator.runtimeAnimatorController;
+                    characterAnimator = avatar.GetComponent<Animator>();
+                    characterAnimator.Play("Sit", 0, UnityEngine.Random.Range(0, 1));
+                };
+                avatarLoader.LoadAvatar((string)player.CustomProperties["readyPlayerMeAvatarUrl"]);
+            }
         }
 
         playerName.SetLabel(ph.GetPlayerNickname(player));
@@ -63,7 +87,8 @@ public class NetworkRoomSeat : MonoBehaviour
         actorNo = 0;
 
         player = null;
-        character.gameObject.SetActive(false);
+        characterAnimation.gameObject.SetActive(false);
+        characterAnimator.gameObject.SetActive(false);
         playerName.gameObject.SetActive(false);
 
         onSeatVaccated?.Invoke();

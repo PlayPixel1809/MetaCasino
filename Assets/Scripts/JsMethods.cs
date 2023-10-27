@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public class JsMethods : MonoBehaviour
 {
+    public static JsMethods ins;
+    void Awake() { ins = this; }
+
     [DllImport("__Internal")]
     private static extern void Hello();
 
@@ -22,13 +25,21 @@ public class JsMethods : MonoBehaviour
     private static extern string StringReturnValueFunction();
 
     [DllImport("__Internal")]
+    public static extern string GetEmailFromUrl();
+
+    [DllImport("__Internal")]
+    public static extern string GetPasswordFromUrl();
+
+    [DllImport("__Internal")]
     private static extern void BindWebGLTexture(int texture);
+
+    
 
     public Text text;
 
     void Start()
     {
-        //Hello();
+        //text.text = GetDataFromUrl("email");
 
         //HelloString("This is a string.");
 
@@ -47,11 +58,25 @@ public class JsMethods : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.A)) 
+        if (Input.GetKeyUp(KeyCode.E)) 
         {
-            int result = AddNumbers(5, 7);
-            text.text = Time.time + result.ToString();
-        }   
+            text.text = GetEmailFromUrl();
+        }
+
+        if (Input.GetKeyUp(KeyCode.P))
+        {
+            text.text = GetPasswordFromUrl();
+        }
+
+        if (Input.GetKeyUp(KeyCode.B))
+        {
+            text.text = AddNumbers(10,10).ToString();
+        }
+
+        if (Input.GetKeyUp(KeyCode.C))
+        {
+            text.text = StringReturnValueFunction();
+        }
     }
 }
 

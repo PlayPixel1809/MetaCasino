@@ -57,6 +57,16 @@ public class NetworkRoomClient : MonoBehaviourPunCallbacks, IOnEventCallback
 
     void Start()
     {
+        if (!string.IsNullOrEmpty(User.localUser.readyPlayerMeAvatarUrl)) 
+        {
+            ExitGames.Client.Photon.Hashtable changedProp = new ExitGames.Client.Photon.Hashtable()
+            {
+                { "readyPlayerMeAvatarUrl", User.localUser.readyPlayerMeAvatarUrl}
+            };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(changedProp);
+        }
+       
+
         if (User.localUser != null) { Initiate(); }
         else
         {

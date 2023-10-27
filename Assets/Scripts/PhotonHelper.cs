@@ -21,7 +21,7 @@ public static class ph //photon helper
         {
             if (PhotonNetwork.PlayerList[i].ActorNumber == actorNo) { return PhotonNetwork.PlayerList[i]; }
         }
-        return new Player() { ActorNumber = actorNo };
+        return new Player() { ActorNumber = actorNo, CustomProperties = new ExitGames.Client.Photon.Hashtable() };
     }
 
     public static bool IsPlayerOnline(string nickname)

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PlayFab;
+﻿using PlayFab;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
