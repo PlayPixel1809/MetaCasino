@@ -18,29 +18,62 @@ public class AutoLogin : MonoBehaviour
     //localhost:54380/?email=digitalmetahuman@gmail.com&password=testpass123
     void Start()
     {
+        NoticeUtils.ins.ShowOneBtnAlert("App Loaded");
+
+        //JsMethods.GetToken();
+
+
+        /*
         string email = "digitalmetahuman@gmail.com";
         string password = "testpass123";
+
+
 
         if (Application.platform == RuntimePlatform.WebGLPlayer) 
         {
             email = JsMethods.GetEmailFromUrl();
             password = JsMethods.GetPasswordFromUrl();
         }
-        
-        
-        
-        StartCoroutine(GetToken(email, password, (text)=>
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(email))
         {
-            Debug.Log(text);
-            getTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
-            StartCoroutine(ValidateToken(getTokenResponse.data.token, (text) => 
+            NoticeUtils.ins.ShowOneBtnAlert("email or password not set in the url, Set email and password in the url and reload the page");
+        }
+        else 
+        {
+            StartCoroutine(GetToken(email, password, (text) =>
             {
                 Debug.Log(text);
-                validateTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
-                LoginWithEmail(getTokenResponse.data.email);
+                getTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
+                StartCoroutine(ValidateToken(getTokenResponse.data.token, (text) =>
+                {
+                    Debug.Log(text);
+                    validateTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
+                    LoginWithEmail(getTokenResponse.data.email);
+                }));
             }));
+        }*/
+
+    }
+
+    public void ShowTokenError(string error)
+    {
+        NoticeUtils.ins.ShowOneBtnAlert("Error: " + error);
+    }
+
+
+    public void SetToken(string token)
+    {
+        StartCoroutine(ValidateToken(token, (text) =>
+        {
+            Debug.Log(text);
+            validateTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
+            LoginWithEmail(getTokenResponse.data.email);
         }));
     }
+
+
+
 
 
     IEnumerator GetToken(string username, string password, Action<string> onSuccess)

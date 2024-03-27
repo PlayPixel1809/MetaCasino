@@ -31,6 +31,9 @@ public class JsMethods : MonoBehaviour
     public static extern string GetPasswordFromUrl();
 
     [DllImport("__Internal")]
+    public static extern void GetToken();
+
+    [DllImport("__Internal")]
     private static extern void BindWebGLTexture(int texture);
 
     
@@ -58,6 +61,11 @@ public class JsMethods : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyUp(KeyCode.T))
+        {
+            GetToken();
+        }
+
         if (Input.GetKeyUp(KeyCode.E)) 
         {
             text.text = GetEmailFromUrl();

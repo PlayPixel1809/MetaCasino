@@ -28,11 +28,17 @@ mergeInto(LibraryManager.library, {
    GetEmailFromUrl: function () {
    
     const queryString = window.location.search;
+	
     console.log(queryString);
 
     const urlParams = new URLSearchParams(queryString);
 
     var email = urlParams.get('email');
+	if(!email)
+	{
+		alert("email not set in url");
+		return;
+	}
     console.log(email);
     
 	var returnStr = email;
@@ -52,6 +58,12 @@ mergeInto(LibraryManager.library, {
     const urlParams = new URLSearchParams(queryString);
 
     var password = urlParams.get('password');
+	if(!password)
+	{
+		alert("password not set in url");
+		return;
+	}
+	
     console.log(password);
     
 	var returnStr = password;
@@ -63,8 +75,49 @@ mergeInto(LibraryManager.library, {
 	
   },
 
+
+  GetToken: function () 
+  {
+    console.log("SetToken");
+    window.addEventListener("message", function(event) 
+    {
+        console.log("addEventListener");
+
+        // Check the origin of the message to ensure it's from a trusted source
+        if (event.origin !== "http://theomniverse.city") 
+        { 
+            SendMessage('Scripts', 'ShowTokenError', 'event.origin !== http://theomniverse.city');
+            return; 
+        }
+  
+        // The user's information is contained in event.data
+        let data = event.data;
+    
+        
+        if(data && (data.event == "userInfoEvent"))
+        {
+            console.log("userInfoEvent");
+            
+            let userInfo = data.data;
+        
+            username = userInfo.username;    
+            email = userInfo.email;
+            jwt = userInfo.token;
+            baseURL = userInfo.baseURL;
+            console.log(username, email, jwt);
+
+            SendMessage('Scripts', 'SetToken', jwt);
+        }
+    });
+
+    window.parent.postMessage({ command: 'getUserInfo' }, '*');
+  },
+
+
   BindWebGLTexture: function (texture) {
     GLctx.bindTexture(GLctx.TEXTURE_2D, GL.textures[texture]);
   },
+
+
 
 });
