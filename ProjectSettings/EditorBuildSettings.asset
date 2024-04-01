@@ -14,13 +14,13 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/City.unity
     guid: 56bae533588ab7944a98071fe8048518
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Casino.unity
     guid: 22f076953f48de3498bb87b79c297d6e
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/HoldemTable.unity
     guid: 2877c98efb80e8a408e7b7207c5a1f7d
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/OmahaTable.unity
     guid: e0ef3e6395f661d44b2677ef3b7616ae
   - enabled: 0

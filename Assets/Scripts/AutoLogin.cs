@@ -9,8 +9,6 @@ using UnityEngine.Networking;
 
 public class AutoLogin : MonoBehaviour
 {
-    
-
     [Space(30)]
     public ResponseInfo getTokenResponse;
     public ResponseInfo validateTokenResponse;
@@ -18,29 +16,13 @@ public class AutoLogin : MonoBehaviour
     //localhost:54380/?email=digitalmetahuman@gmail.com&password=testpass123
     void Start()
     {
-        NoticeUtils.ins.ShowOneBtnAlert("App Loaded");
+        //NoticeUtils.ins.ShowOneBtnAlert("App Loaded");
 
-        //JsMethods.GetToken();
-
-
-        /*
-        string email = "digitalmetahuman@gmail.com";
-        string password = "testpass123";
-
-
-
-        if (Application.platform == RuntimePlatform.WebGLPlayer) 
+        if (Application.isEditor)
         {
-            email = JsMethods.GetEmailFromUrl();
-            password = JsMethods.GetPasswordFromUrl();
-        }
-
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(email))
-        {
-            NoticeUtils.ins.ShowOneBtnAlert("email or password not set in the url, Set email and password in the url and reload the page");
-        }
-        else 
-        {
+            string email = "digitalmetahuman@gmail.com";
+            string password = "testpass123";
+            
             StartCoroutine(GetToken(email, password, (text) =>
             {
                 Debug.Log(text);
@@ -49,10 +31,15 @@ public class AutoLogin : MonoBehaviour
                 {
                     Debug.Log(text);
                     validateTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
-                    LoginWithEmail(getTokenResponse.data.email);
+                    LoginWithEmail(validateTokenResponse.data.user.email);
                 }));
             }));
-        }*/
+        }
+
+        else { JsMethods.GetToken(); }
+
+
+        
 
     }
 
@@ -68,13 +55,9 @@ public class AutoLogin : MonoBehaviour
         {
             Debug.Log(text);
             validateTokenResponse = JsonUtility.FromJson<ResponseInfo>(text);
-            LoginWithEmail(getTokenResponse.data.email);
+            LoginWithEmail(validateTokenResponse.data.user.email);
         }));
     }
-
-
-
-
 
     IEnumerator GetToken(string username, string password, Action<string> onSuccess)
     {
@@ -117,7 +100,18 @@ public class AutoLogin : MonoBehaviour
             LoadPlayerMeAvatar(validateTokenResponse.data.user.avatar);
         };
 
-        User.LoginAndCreateLocalUser(email, "12345678", (loginResult)=>{ loginResult.InfoResultPayload.AccountInfo.TitleInfo.DisplayName = getTokenResponse.data.firstName; }, 
+        User.LoginAndCreateLocalUser(email, "12345678", (loginResult)=>
+        {
+            if (Application.isEditor) { loginResult.InfoResultPayload.AccountInfo.TitleInfo.DisplayName = getTokenResponse.data.firstName; }
+            else
+            {
+                string displayName = "User " + UnityEngine.Random.Range(1,10000);
+                if (!string.IsNullOrEmpty(validateTokenResponse.data.user.name)) { displayName = validateTokenResponse.data.user.name; }
+                if (!string.IsNullOrEmpty(validateTokenResponse.data.user.username)) { displayName = validateTokenResponse.data.user.username; }
+
+                loginResult.InfoResultPayload.AccountInfo.TitleInfo.DisplayName = displayName;
+            }
+        }, 
         (error)=> 
         {
             RegisterByEmail(email, (playFabId) => { LoginWithEmail(email); });
@@ -225,5 +219,8 @@ public class AutoLogin : MonoBehaviour
     public class UserInfo
     {
         public string avatar;
+        public string email;
+        public string username;
+        public string name;
     }
 }
